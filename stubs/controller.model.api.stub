@@ -1,0 +1,97 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ namespacedModel }};
+use {{ rootNamespace }}Http\Controllers\Controller;
+use {{ namespacedRequests }}
+use App\Http\Requests\Api\{{ model }}Request;
+use App\Actions\Api\{{ model }}Actions\Destroy{{ model }}Action;
+use App\Actions\Api\{{ model }}Actions\Index{{ model }}Action;
+use App\Actions\Api\{{ model }}Actions\Show{{ model }}Action;
+use App\Actions\Api\{{ model }}Actions\Store{{ model }}Action;
+use App\Actions\Api\{{ model }}Actions\Update{{ model }}Action;
+use App\Http\Resources\{{ model }}Resource;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\QueryParameter;
+
+#[Group(name: '{{ model }} Management')]
+class {{ class }} extends Controller implements HasMiddleware
+{
+    public static function middleware()
+    {
+        return [
+            new Middleware('can:view-{{ modelVariable }}s', only: ['index', 'show']),
+            new Middleware('can:create-{{ modelVariable }}s', only: ['store']),
+            new Middleware('can:update-{{ modelVariable }}s', only: ['update']),
+            new Middleware('can:delete-{{ modelVariable }}s', only: ['destroy']),
+        ];
+    }
+
+    /**
+     * {{ model }} List
+     *
+     * Get a paginated list of {{ modelVariable }}s.
+     */
+     #[QueryParameter('page', description: 'The current page number.', type: 'int', example: 2)]
+     #[QueryParameter('search', description: 'Query string for searching the data by.', type: 'string', example: 'something')]
+     #[QueryParameter('sortBy', description: 'Column name to sort data by.', type: 'string', default: 'id', example: 'name')]
+     #[QueryParameter('sortDesc', description: 'Sort direction descending or ascending.', type: 'boolean', example: false)]
+     #[QueryParameter('perPage', description: 'Number of items per page.', type: 'int', default: 30, example: 10)]
+    public function index(Request $request, Index{{ model }}Action $index{{ model }}Action)
+    {
+        $data = $index{{ model }}Action->handle($request);
+
+        return {{ model }}Resource::collection($data['{{ modelVariable }}s'])->additional(['filters' => $data['filters']]);
+    }
+
+    /**
+     * Create {{ model }}
+     *
+     * Create a new {{ modelVariable }}.
+     */
+    public function store({{ model }}Request $request, Store{{ model }}Action $store{{ model }}Action)
+    {
+        ${{ modelVariable }} = $store{{ model }}Action->handle($request->validated());
+
+        return {{ model }}Resource::make(${{ modelVariable }});
+    }
+
+    /**
+     * Get {{ model }}
+     *
+     * Get a {{ modelVariable }} by {{ modelVariable }}_id.
+     */
+    public function show({{ model }} ${{ modelVariable }}, Show{{ model }}Action $show{{ model }}Action)
+    {
+        ${{ modelVariable }} = $show{{ model }}Action->handle(${{ modelVariable }});
+
+        return {{ model }}Resource::make(${{ modelVariable }});
+    }
+
+    /**
+     * Update {{ model }}
+     *
+     * Update a {{ modelVariable }} by {{ modelVariable }}_id.
+     */
+    public function update({{ model }}Request $request, {{ model }} ${{ modelVariable }},  Update{{ model }}Action $update{{ model }}Action)
+    {
+        ${{ modelVariable }} = $update{{ model }}Action->handle($request->validated(), ${{ modelVariable }});
+
+        return {{ model }}Resource::make(${{ modelVariable }});
+    }
+
+    /**
+     * Delete {{ model }}
+     *
+     * Delete a {{ modelVariable }} by {{ modelVariable }}_id.
+     */
+    public function destroy({{ model }} ${{ modelVariable }},  Destroy{{ model }}Action $destroy{{ model }}Action)
+    {
+        $destroy{{ model }}Action->handle(${{ modelVariable }});
+
+        return response()->json(['message' => trans('success.deleted')]);
+    }
+}

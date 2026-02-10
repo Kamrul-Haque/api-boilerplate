@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Traits\HasAuthorizeOwner;
+use App\Traits\HasCreatedBy;
+use App\Traits\Trashable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class {{ class }} extends Model
+{
+    use HasAuthorizeOwner;
+    use HasCreatedBy;
+    use HasFactory;
+    use Trashable;
+
+    protected $guarded = ['id'];
+}

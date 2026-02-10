@@ -1,0 +1,51 @@
+<?php
+
+namespace Tests\Feature\Api\PermissionTests;
+
+use App\Models\Module;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Traits\HasAccessControlSetup;
+use Exception;
+
+uses(HasAccessControlSetup::class);
+
+beforeEach(
+    /**
+     * @throws Exception
+     */
+    function () {
+        $this->setUpAccessControl();
+
+        $this->admin = Role::where('name', 'admin')->first()->users()->first();
+
+        $this->module = Module::create([
+            'name' => 'test-module',
+            'display_name' => 'Test Module',
+            'route_prefix' => 'test-module',
+        ]);
+
+        $this->permission = Permission::create([
+            'module_id' => $this->module->id,
+            'name' => 'test-permission',
+            'display_name' => 'Test Permission',
+        ]);
+    }
+);
+
+test('unauthenticated user cannot access delete endpoint', function () {
+    $this->deleteJson("/api/permissions/{$this->permission->id}")
+        ->assertStatus(401);
+});
+
+test('unauthorized user cannot access delete endpoint', function () {
+    $this->actingAs($this->admin, 'sanctum')
+        ->deleteJson("/api/permissions/{$this->permission->id}")
+        ->assertStatus(403);
+});
+
+test('authenticated user can access delete endpoint', function () {
+    $this->actingAs($this->systemAdmin, 'sanctum')
+        ->deleteJson("/api/permissions/{$this->permission->id}")
+        ->assertStatus(200);
+});

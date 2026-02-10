@@ -1,0 +1,71 @@
+<script setup>
+import Admin from "@/Layouts/Admin.vue";
+import {Head} from "@inertiajs/vue3";
+import {useForm} from "laravel-precognition-vue-inertia";
+
+const props = defineProps(["{{ variable }}"]);
+
+const form = useForm(
+    "post",
+    props.{{ variable }}
+    ? route("{{ uri }}.update", props.{{ variable }}.id)
+: route("{{ uri }}.store"),
+    {
+        _method: props.{{ variable }} ? "put" : "post",
+    title: props.{{ variable }} ? props.{{ variable }}.title : null,
+    description: props.{{ variable }} ? props.{{ variable }}.description : null,
+}
+);
+
+function submit() {
+    form.submit({preserveScroll: true});
+}
+</script>
+
+<template>
+
+    <Head title="{{ model }}s"/>
+
+    <Admin>
+        <div class="bg-white shadow rounded-md w-full md:w-3/4 mx-auto">
+            <h1 class="font-semibold text-xl text-gray-900 my-4">{{ props.{{ variable }} ? 'Edit {{ model }}' : 'Create {{ model }}' }}</h1>
+            <form @submit.prevent="submit()">
+                <div class="my-4">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Title
+                    </label>
+                    <input v-model="form.title"
+                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                           @change="form.validate('title')"
+                           autofocus
+                           required/>
+                    <p v-if="form.invalid('title')"
+                       class="text-sm text-red-600">
+                        {{ form.errors.title }}
+                    </p>
+                </div>
+
+                <div class="my-4">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Description
+                    </label>
+                    <textarea v-model="form.description"
+                              class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                              @change="form.validate('description')"
+                              autofocus
+                              required></textarea>
+                    <p v-if="form.invalid('description')"
+                       class="text-sm text-red-600">
+                        {{ form.errors.description }}
+                    </p>
+                </div>
+
+                <div class="text-right mt-8">
+                    <button type="submit" class="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </Admin>
+</template>

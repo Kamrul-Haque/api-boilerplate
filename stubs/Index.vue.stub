@@ -1,0 +1,114 @@
+<script>
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import {Link, Head} from "@inertiajs/vue3";
+
+const props = defineProps(['{{ variable }}s']);
+</script>
+
+<template>
+    <Head title="{{ model }}s"/>
+
+    <AuthenticatedLayout>
+        <div class="py-12">
+            <Link :href="route('{{ uri }}.create')"
+                  class="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900">
+                Create New
+            </Link>
+            <div class="bg-white shadow rounded-md px-5">
+                <div class="flex flex-col">
+                    <div class="overflow-x-auto">
+                        <div class="inline-block min-w-full py-2">
+                            <div class="overflow-hidden">
+                                <table class="min-w-full table table-auto rounded">
+                                    <thead class="capitalize border-b text-left">
+                                    <tr>
+                                        <th class="px-4 py-2"
+                                            scope="col">
+                                            #
+                                        </th>
+                                        <th class="px-4 py-2"
+                                            scope="col">
+                                            Title
+                                        </th>
+                                        <th class="px-4 py-2"
+                                            scope="col">
+                                            Description
+                                        </th>
+                                        <th class="px-4 py-2">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <template v-if="props.{{ variable }}s.data.count">
+                                        <template v-for="{{ variable }} in props.{{ variable }}s.data"
+                                                  :key="{{ variable }}.id">
+                                            <tr class="border-t">
+                                                <td>{{ {{variable}}.id }}</td>
+                                                <td>{{ {{variable}}.title }}</td>
+                                                <td>{{ {{variable}}.description }}</td>
+                                                <td class="px-4 py-2 h-14 flex items-center space-x-2">
+                                                    <Link :href="route('{{ uri }}.show', {{ variable }})"
+                                                       class="text-blue-600 hover:text-blue-900">Details</Link>
+                                                    <Link :href="route('{{ uri }}.edit', {{ variable }})"
+                                                       class="text-indigo-600 hover:text-indigo-900">Edit</Link>
+                                                    <Link :href="route('{{ uri }}.destroy', {{ variable }})"
+                                                          class="text-red-600 hover:text-red-900"
+                                                          :method="delete">
+                                                        Delete
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template v-else>
+                                        <tr>
+                                            <td :colspan="4"
+                                                class="text-center py-2">No Records Found
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <template :is="(link.url) ? Link : 'span'"
+                       v-for="(link, index) in props.{{ variable }}.links"
+                       :key="index"
+                       :class="{'page-link-disabled': !link.url, 'page-link-active': link.active}"
+                       :href="link.url"
+                       class="page-link"
+                       v-html="link.label">
+            </template>
+        </div>
+    </AuthenticatedLayout>
+</template>
+
+<style>
+.page-link {
+    background: #ffffff;
+    border-radius: 4px;
+    font-size: 1rem;
+    height: 75px;
+    margin: 3px;
+    min-width: 75px;
+    padding: 5px 10px;
+    text-decoration: none;
+    transition: 0.3s cubic-bezier(0, 0, 0.2, 1);
+    width: auto;
+    color: #616161 !important;
+}
+
+.page-link-active {
+    background: deepskyblue;
+    color: white !important;
+}
+
+.page-link-disabled {
+    background: lightgrey !important;
+    color: #9e9e9e !important;
+}
+</style>

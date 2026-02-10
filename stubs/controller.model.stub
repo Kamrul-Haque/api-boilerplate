@@ -1,0 +1,83 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ namespacedModel }};
+use {{ rootNamespace }}Http\Controllers\Controller;
+use {{ namespacedRequests }}
+use App\Http\Requests\{{ model }}Request;
+
+class {{ class }} extends Controller
+{
+    /**
+     * Display a listing of the {{ modelVariable }}.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new {{ modelVariable }}.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created {{ modelVariable }} in storage.
+     */
+    public function store({{ model }}Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified {{ modelVariable }}.
+     */
+    public function show({{ model }} ${{ modelVariable }})
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified {{ modelVariable }}.
+     */
+    public function edit({{ model }} ${{ modelVariable }})
+    {
+        //
+    }
+
+    /**
+     * Update the specified {{ modelVariable }} in storage.
+     */
+    public function update({{ model }}Request $request, {{ model }} ${{ modelVariable }})
+    {
+        //
+    }
+
+    /**
+     * Deactivate the specified {{ modelVariable }}.
+     */
+    public function deactivate(int ${{ modelVariable }})
+    {
+        //
+    }
+
+    /**
+     * Restore the specified {{ modelVariable }}.
+     */
+    public function restore(int ${{ modelVariable }})
+    {
+        //
+    }
+
+    /**
+     * Remove the specified {{ modelVariable }} from storage.
+     */
+    public function destroy({{ model }} ${{ modelVariable }})
+    {
+        //
+    }
+}

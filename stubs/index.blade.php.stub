@@ -1,0 +1,77 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight text-capitalize">
+            {{ __('Tests') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <a href="{{ route('{{ uri }}.create') }}"
+            class="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900">
+            Create New
+        </a>
+        <div class="bg-white shadow rounded-md px-5">
+            <div class="flex flex-col">
+                <div class="overflow-x-auto">
+                    <div class="inline-block min-w-full py-2">
+                        <div class="overflow-hidden">
+                            <table class="min-w-full table table-auto rounded">
+                                <thead class="capitalize border-b text-left">
+                                <tr>
+                                    <th class="px-4 py-2"
+                                        scope="col">
+                                        {{ __('#') }}
+                                    </th>
+                                    <th class="px-4 py-2"
+                                        scope="col">
+                                        {{ __('Title') }}
+                                    </th>
+                                    <th class="px-4 py-2"
+                                        scope="col">
+                                        {{ __('Description') }}
+                                    </th>
+                                    <th class="px-4 py-2">
+                                        {{ __('Actions') }}
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @forelse (${{ variable }}s as ${{ variable }})
+                                    <tr class="border-t">
+                                        <td>{{ ${{ variable }}->id }}</td>
+                                        <td>{{ ${{ variable }}->title }}</td>
+                                        <td>{{ ${{ variable }}->description }}</td>
+                                        <td class="px-4 py-2 h-14 flex items-center space-x-2">
+                                            <a href="{{ route('{{ uri }}.show', ${{ variable }}) }}"
+                                               class="text-blue-600 hover:text-blue-900">Details</a>
+                                            <a href="{{ route('{{ uri }}.edit', ${{ variable }}) }}"
+                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <form action="{{ route('{{ uri }}.destroy', ${{ variable }}) }}"
+                                                  method="post">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit"
+                                                        class="text-red-600 hover:text-red-900">Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td :colspan="4"
+                                            class="text-center py-2">No Records Found
+                                        </td>
+                                    </tr>
+                                @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-x-2 space-y-2 justify-between items-center my-4">
+            {{ ${{ variable }}s->links() }}
+        </div>
+    </div>
+</x-app-layout>

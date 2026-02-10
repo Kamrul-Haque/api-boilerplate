@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Actions\BaseAction;
+
+class {{ className }} extends BaseAction
+{
+    /**
+     * Perform the action
+     */
+    public function handle()
+    {
+        //
+    }
+}
