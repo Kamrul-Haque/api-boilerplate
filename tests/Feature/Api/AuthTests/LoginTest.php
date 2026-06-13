@@ -27,11 +27,11 @@ test('login validation works', function () {
         'email' => 'admin*123',
         'password' => 'test',
     ])
-         ->assertStatus(422)
-         ->assertJsonStructure([
-             'message',
-             'errors' => ['email', 'password'],
-         ]);
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'message',
+            'errors' => ['email', 'password'],
+        ]);
 });
 
 test('credential check works properly', function () {
@@ -42,20 +42,20 @@ test('credential check works properly', function () {
 
 test('login response is correct', function () {
     $this->postJson('/api/login', ['email' => $this->user->email, 'password' => $this->password])
-         ->assertStatus(200)
-         ->assertJsonStructure([
-             'message',
-             'token',
-             'user' => ['id', 'name', 'email', 'phone', 'avatar'],
-         ]);
+        ->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'token',
+            'user' => ['id', 'name', 'email', 'phone', 'avatar'],
+        ]);
 });
 
 test('rate limit works properly', function () {
     Artisan::call('cache:clear');
 
     $this->postJson('/api/login')
-         ->assertHeader('X-Ratelimit-Limit', 5)
-         ->assertHeader('X-Ratelimit-Remaining', 4);
+        ->assertHeader('X-Ratelimit-Limit', 5)
+        ->assertHeader('X-Ratelimit-Remaining', 4);
 
     Artisan::call('cache:clear');
 

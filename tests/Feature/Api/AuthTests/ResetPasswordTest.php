@@ -19,22 +19,22 @@ beforeEach(function () {
 
 test('forgot password endpoint works and validation works', function () {
     $this->postJson('/api/forgot-password')
-         ->assertStatus(422)
-         ->assertJsonStructure([
-             'message',
-             'errors' => [
-                 'email',
-             ],
-         ]);
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'message',
+            'errors' => [
+                'email',
+            ],
+        ]);
 
     $this->postJson('/api/forgot-password', ['email' => 'test.test'])
-         ->assertStatus(422)
-         ->assertJsonStructure([
-             'message',
-             'errors' => [
-                 'email',
-             ],
-         ]);
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'message',
+            'errors' => [
+                'email',
+            ],
+        ]);
 });
 
 test(/**
@@ -43,7 +43,7 @@ test(/**
     Notification::fake();
 
     $this->postJson('/api/forgot-password', ['email' => $this->user->email])
-         ->assertStatus(200);
+        ->assertStatus(200);
 
     $code = VerificationCode::where('email', $this->user->email)->first()->code;
 
@@ -55,15 +55,15 @@ test(/**
 
 test('reset password endpoint validation requires necessary fields', function () {
     $this->postJson('/api/reset-password', [])
-         ->assertStatus(422)
-         ->assertJsonStructure([
-             'message',
-             'errors' => [
-                 'password_reset_token',
-                 'verification_code',
-                 'password',
-             ],
-         ]);
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'message',
+            'errors' => [
+                'password_reset_token',
+                'verification_code',
+                'password',
+            ],
+        ]);
 });
 
 test('reset password token validation works', function () {
@@ -75,8 +75,8 @@ test('reset password token validation works', function () {
         'password' => $this->password,
         'password_confirmation' => $this->password,
     ])
-         ->assertStatus(422)
-         ->assertJsonPath('message', 'Invalid token.');
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Invalid token.');
 });
 
 test('reset password verification code validation works', function () {
@@ -94,8 +94,8 @@ test('reset password verification code validation works', function () {
         'password' => $this->password,
         'password_confirmation' => $this->password,
     ])
-         ->assertStatus(422)
-         ->assertJsonPath('message', 'Invalid verification code.');
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Invalid verification code.');
 });
 
 test('reset password verification code expiry works', function () {
@@ -112,8 +112,8 @@ test('reset password verification code expiry works', function () {
         'password' => $this->password,
         'password_confirmation' => $this->password,
     ])
-         ->assertStatus(422)
-         ->assertJsonPath('message', 'The verification code has expired.');
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'The verification code has expired.');
 });
 
 test('password reset endpoint works', function () {
@@ -129,7 +129,7 @@ test('password reset endpoint works', function () {
         'email' => $this->user->email,
         'password' => $this->password,
     ])
-         ->assertStatus(200);
+        ->assertStatus(200);
 
     $this->postJson('/api/reset-password', [
         'password_reset_token' => $verificationCode->token,
@@ -137,17 +137,17 @@ test('password reset endpoint works', function () {
         'password' => $newPassword,
         'password_confirmation' => $newPassword,
     ])
-         ->assertStatus(200);
+        ->assertStatus(200);
 
     $this->postJson('/api/login', [
         'email' => $this->user->email,
         'password' => $this->password,
     ])
-         ->assertStatus(401);
+        ->assertStatus(401);
 
     $this->postJson('/api/login', [
         'email' => $this->user->email,
         'password' => $newPassword,
     ])
-         ->assertStatus(200);
+        ->assertStatus(200);
 });

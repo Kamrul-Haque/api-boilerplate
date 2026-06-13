@@ -75,7 +75,7 @@ class User extends Authenticatable
      */
     public function hasRole(int|string $role): bool
     {
-        if (!is_numeric($role)) {
+        if (! is_numeric($role)) {
             $role = Role::whereName($role)->first();
         } else {
             $role = Role::find($role);
@@ -107,7 +107,7 @@ class User extends Authenticatable
 
         $this->roles()->sync($role->id, false);
 
-        if (!$this->getRawOriginal('active_role_id')) {
+        if (! $this->getRawOriginal('active_role_id')) {
             $this->update(['active_role_id' => $role->id]);
         }
     }

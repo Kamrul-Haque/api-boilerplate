@@ -3,6 +3,7 @@
 namespace App\Actions\Api\UserActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\UserData;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Arr;
@@ -18,9 +19,11 @@ class UpdateUserAction extends BaseAction
      * @throws Exception
      * @throws Throwable
      */
-    public function handle(mixed $validated, User $user): User
+    public function handle(UserData $userData, User $user): User
     {
         $user->authorizeOwnerOrPermission();
+
+        $validated = $userData->toArray();
 
         if (isset($validated['avatar'])) {
             if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {

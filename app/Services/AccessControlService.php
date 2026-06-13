@@ -178,7 +178,7 @@ class AccessControlService
             $name = $basePermission['name'].'-'.$routePrefix;
             $existingPermission = Permission::where('name', $name)->exists();
 
-            if (!$existingPermission) {
+            if (! $existingPermission) {
                 $permission = $module->permissions()->create([
                     'name' => $name,
                     'display_name' => $basePermission['display_name'],
@@ -253,40 +253,40 @@ class AccessControlService
         switch ($roleName) {
             case 'system-admin':
                 $permissions = Permission::query()
-                                         ->pluck('id');
+                    ->pluck('id');
                 break;
             case 'super-admin':
                 $permissions = Permission::query()
-                                         ->where('name', 'NOT LIKE', '%modules')
-                                         ->where('name', 'NOT LIKE', '%permissions')
-                                         ->where('name', 'NOT LIKE', '%trashes')
-                                         ->pluck('id');
+                    ->where('name', 'NOT LIKE', '%modules')
+                    ->where('name', 'NOT LIKE', '%permissions')
+                    ->where('name', 'NOT LIKE', '%trashes')
+                    ->pluck('id');
                 $viewPermissions = Permission::query()
-                                             ->where('name', 'LIKE', 'view%')
-                                             ->pluck('id');
+                    ->where('name', 'LIKE', 'view%')
+                    ->pluck('id');
                 $permissions = $permissions->merge($viewPermissions)->unique()->values();
                 break;
             case 'admin':
                 $permissions = Permission::query()
-                                         ->where('name', 'NOT LIKE', '%modules')
-                                         ->where('name', 'NOT LIKE', '%permissions')
-                                         ->where('name', 'NOT LIKE', '%trashes')
-                                         ->where('name', 'NOT LIKE', 'delete-roles')
-                                         ->where('name', 'NOT LIKE', 'delete-users')
-                                         ->pluck('id');
+                    ->where('name', 'NOT LIKE', '%modules')
+                    ->where('name', 'NOT LIKE', '%permissions')
+                    ->where('name', 'NOT LIKE', '%trashes')
+                    ->where('name', 'NOT LIKE', 'delete-roles')
+                    ->where('name', 'NOT LIKE', 'delete-users')
+                    ->pluck('id');
                 $viewPermissions = Permission::query()
-                                             ->where('name', 'LIKE', 'view%')
-                                             ->pluck('id');
+                    ->where('name', 'LIKE', 'view%')
+                    ->pluck('id');
                 $permissions = $permissions->merge($viewPermissions)->unique()->values();
                 break;
             case 'user':
                 $permissions = Permission::query()
-                                         ->where('name', 'NOT LIKE', '%modules')
-                                         ->where('name', 'NOT LIKE', '%permissions')
-                                         ->where('name', 'NOT LIKE', '%trashes')
-                                         ->where('name', 'NOT LIKE', '%roles')
-                                         ->where('name', 'NOT LIKE', '%users')
-                                         ->pluck('id');
+                    ->where('name', 'NOT LIKE', '%modules')
+                    ->where('name', 'NOT LIKE', '%permissions')
+                    ->where('name', 'NOT LIKE', '%trashes')
+                    ->where('name', 'NOT LIKE', '%roles')
+                    ->where('name', 'NOT LIKE', '%users')
+                    ->pluck('id');
                 break;
         }
 
@@ -300,7 +300,7 @@ class AccessControlService
      */
     public static function truncateAndCreateDefaultUsersAndAssignRoles(): void
     {
-        if (!app()->isProduction()) {
+        if (! app()->isProduction()) {
             if (Schema::hasTable('users') && DB::table('users')->count()) {
                 DB::table('users')->delete();
                 DB::statement('ALTER TABLE users AUTO_INCREMENT = 1;');
@@ -335,8 +335,8 @@ class AccessControlService
             $permission = Permission::with('module')->find($permission);
 
             $view_permission = Permission::where('module_id', $permission->module_id)
-                                         ->where('name', 'view-'.$permission->module->route_prefix)
-                                         ->first();
+                ->where('name', 'view-'.$permission->module->route_prefix)
+                ->first();
 
             if ($view_permission) {
                 $role->permissions()->syncWithoutDetaching($view_permission);

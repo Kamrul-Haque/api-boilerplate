@@ -1,5 +1,5 @@
 {
-    "$schema": "https://getcomposer.org/schema.json",
+    "schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "ext-mbstring": "*",
         "aws/aws-sdk-php": "^3.351",
         "dedoc/scramble": "^0.12.18",
@@ -17,12 +17,11 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.0",
-        "maatwebsite/excel": "^3.1",
         "opcodesio/log-viewer": "^3.18"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "kamrul-haque/action-crud-helper": "^3.0",
+        "kamrul-haque/action-crud-helper": "^4.0",
         "laravel/boost": "^1.6",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",

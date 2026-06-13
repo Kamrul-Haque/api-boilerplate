@@ -9,6 +9,7 @@ use App\Actions\Api\UserActions\IndexUserAction;
 use App\Actions\Api\UserActions\ShowUserAction;
 use App\Actions\Api\UserActions\StoreUserAction;
 use App\Actions\Api\UserActions\UpdateUserAction;
+use App\DTOs\UserData;
 use App\Exceptions\ClientErrorException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UserImportRequest;
@@ -74,7 +75,8 @@ class UserController extends Controller implements HasMiddleware
      */
     public function store(UserRequest $request, StoreUserAction $storeUserAction)
     {
-        $user = $storeUserAction->handle($request->validated());
+        $userData = UserData::fromRequest($request);
+        $user = $storeUserAction->handle($userData);
 
         return UserResource::make($user);
     }
@@ -107,7 +109,8 @@ class UserController extends Controller implements HasMiddleware
      */
     public function update(UserRequest $request, User $user, UpdateUserAction $updateUserAction)
     {
-        $user = $updateUserAction->handle($request->validated(), $user);
+        $userData = UserData::fromRequest($request);
+        $user = $updateUserAction->handle($userData, $user);
 
         return UserResource::make($user);
     }

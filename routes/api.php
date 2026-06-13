@@ -10,8 +10,8 @@ Route::get('/', function () {
 
 Route::post('register', [ApiControllers\AuthController::class, 'register']);
 Route::post('login', [ApiControllers\AuthController::class, 'login'])
-     ->name('login')
-     ->middleware('throttle:login');
+    ->name('login')
+    ->middleware('throttle:login');
 Route::post('forgot-password', [ApiControllers\AuthController::class, 'forgotPassword']);
 Route::post('reset-password', [ApiControllers\AuthController::class, 'resetPassword']);
 

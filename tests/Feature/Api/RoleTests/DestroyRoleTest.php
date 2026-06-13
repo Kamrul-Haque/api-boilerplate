@@ -27,29 +27,29 @@ beforeEach(/**
 
 test('unauthenticated user cannot access delete endpoint', function () {
     $this->deleteJson("/api/roles/{$this->role->id}")
-         ->assertStatus(401);
+        ->assertStatus(401);
 });
 
 test('unauthorized user cannot delete a role', function () {
     $this->actingAs($this->user, 'sanctum')
-         ->deleteJson("/api/roles/{$this->role->id}")
-         ->assertStatus(403);
+        ->deleteJson("/api/roles/{$this->role->id}")
+        ->assertStatus(403);
 });
 
 test('authenticated user can delete a role', function () {
     $this->actingAs($this->systemAdmin, 'sanctum')
-         ->deleteJson("/api/roles/{$this->role->id}")
-         ->assertStatus(200);
+        ->deleteJson("/api/roles/{$this->role->id}")
+        ->assertStatus(200);
 });
 
 test('authenticated user cannot delete a reserved role', function () {
     $this->actingAs($this->systemAdmin, 'sanctum')
-         ->deleteJson("/api/roles/{$this->reservedRole->id}")
-         ->assertStatus(400);
+        ->deleteJson("/api/roles/{$this->reservedRole->id}")
+        ->assertStatus(400);
 });
 
 test('unauthorized user cannot delete a reserved role', function () {
     $this->actingAs($this->user, 'sanctum')
-         ->deleteJson("/api/roles/{$this->reservedRole->id}")
-         ->assertStatus(403);
+        ->deleteJson("/api/roles/{$this->reservedRole->id}")
+        ->assertStatus(403);
 });

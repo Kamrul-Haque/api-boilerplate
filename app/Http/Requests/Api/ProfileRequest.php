@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Rules\JapanesePhone;
 use App\Rules\Phone;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

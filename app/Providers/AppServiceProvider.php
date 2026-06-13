@@ -38,18 +38,18 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)
-                        ->by($request->user()?->id ?: $request->ip())
-                        ->response(function (Request $request, array $headers) {
-                            return response()->json('Too many attempts, please wait before you retry.', 429, $headers);
-                        });
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function (Request $request, array $headers) {
+                    return response()->json('Too many attempts, please wait before you retry.', 429, $headers);
+                });
         });
 
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)
-                        ->by($request->user()?->id ?: $request->ip())
-                        ->response(function (Request $request, array $headers) {
-                            return response()->json('Too many attempts, please wait before you retry.', 429, $headers);
-                        });
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function (Request $request, array $headers) {
+                    return response()->json('Too many attempts, please wait before you retry.', 429, $headers);
+                });
         });
 
         Gate::before(function (User $user, string $permission) {

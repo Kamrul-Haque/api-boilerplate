@@ -26,21 +26,21 @@ test('register validation works', function () {
         'email' => 'admin%email.com',
         'password' => 'test',
     ])
-         ->assertStatus(422)
-         ->assertJsonStructure([
-             'message',
-             'errors' => ['name', 'email', 'password'],
-         ]);
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'message',
+            'errors' => ['name', 'email', 'password'],
+        ]);
     $this->postJson('/api/register', $this->userData)->assertStatus(200);
     $this->postJson('/api/register', $this->userData)->assertStatus(422);
 });
 
 test('register response is correct', function () {
     $this->postJson('/api/register', $this->userData)
-         ->assertStatus(200)
-         ->assertJsonStructure([
-             'message',
-             'token',
-             'user' => ['id', 'name', 'email', 'phone', 'avatar'],
-         ]);
+        ->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'token',
+            'user' => ['id', 'name', 'email', 'phone', 'avatar'],
+        ]);
 });

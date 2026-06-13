@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(AccessControlSeeder::class);
 
-        if (!app()->isProduction()) {
+        if (! app()->isProduction()) {
             //
         }
     }
