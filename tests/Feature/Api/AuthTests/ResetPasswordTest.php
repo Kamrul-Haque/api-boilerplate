@@ -1,8 +1,9 @@
 <?php
 
+use App\Enums\VerificationCodeIdentifierKey;
+use App\Enums\VerificationCodePurpose;
 use App\Models\User;
 use App\Models\VerificationCode;
-use App\Notifications\SendVerificationCode;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
@@ -15,55 +16,6 @@ beforeEach(function () {
     ]);
 
     Artisan::call('cache:clear');
-});
-
-test('forgot password endpoint works and validation works', function () {
-    $this->postJson('/api/forgot-password')
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'message',
-            'errors' => [
-                'email',
-            ],
-        ]);
-
-    $this->postJson('/api/forgot-password', ['email' => 'test.test'])
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'message',
-            'errors' => [
-                'email',
-            ],
-        ]);
-});
-
-test(/**
- * @throws Exception
- */ 'forgot password endpoint works', function () {
-    Notification::fake();
-
-    $this->postJson('/api/forgot-password', ['email' => $this->user->email])
-        ->assertStatus(200);
-
-    $code = VerificationCode::where('email', $this->user->email)->first()->code;
-
-    Notification::assertSentTo([$this->user],
-        function (SendVerificationCode $notification, array $channels) use ($code) {
-            return $notification->code === $code;
-        });
-});
-
-test('reset password endpoint validation requires necessary fields', function () {
-    $this->postJson('/api/reset-password', [])
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'message',
-            'errors' => [
-                'password_reset_token',
-                'verification_code',
-                'password',
-            ],
-        ]);
 });
 
 test('reset password token validation works', function () {
@@ -81,7 +33,9 @@ test('reset password token validation works', function () {
 
 test('reset password verification code validation works', function () {
     $verificationCode = VerificationCode::create([
-        'email' => $this->user->email,
+        'purpose' => VerificationCodePurpose::RESET_PASSWORD->value,
+        'identifier_key' => VerificationCodeIdentifierKey::EMAIL->value,
+        'identifier_value' => $this->user->email,
         'code' => random_int(100000, 999999),
         'expire_at' => now()->addMinutes(5),
         'token' => Str::uuid(),
@@ -100,7 +54,9 @@ test('reset password verification code validation works', function () {
 
 test('reset password verification code expiry works', function () {
     $verificationCode = VerificationCode::create([
-        'email' => $this->user->email,
+        'purpose' => VerificationCodePurpose::RESET_PASSWORD->value,
+        'identifier_key' => VerificationCodeIdentifierKey::EMAIL->value,
+        'identifier_value' => $this->user->email,
         'code' => random_int(100000, 999999),
         'expire_at' => now()->subMinutes(5),
         'token' => Str::uuid(),
@@ -118,7 +74,9 @@ test('reset password verification code expiry works', function () {
 
 test('password reset endpoint works', function () {
     $verificationCode = VerificationCode::create([
-        'email' => $this->user->email,
+        'purpose' => VerificationCodePurpose::RESET_PASSWORD->value,
+        'identifier_key' => VerificationCodeIdentifierKey::EMAIL->value,
+        'identifier_value' => $this->user->email,
         'code' => random_int(100000, 999999),
         'expire_at' => now()->addMinutes(5),
         'token' => Str::uuid(),

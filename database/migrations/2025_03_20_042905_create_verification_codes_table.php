@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('verification_codes', function (Blueprint $table) {
             $table->id();
-            $table->integer('code')->unsigned();
-            $table->string('email');
+            $table->string('purpose'); // app/Enums/VerificationCodePurpose.php
+            $table->string('code');
+            $table->string('identifier_key'); // app/Enums/VerificationCodeIdentifierKey.php
+            $table->string('identifier_value')->index();
             $table->boolean('is_verified')->default(false);
             $table->timestamp('expire_at')->nullable();
             $table->uuid('token');

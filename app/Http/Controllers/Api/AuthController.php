@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Api\AuthActions\CreateVerificationCodeAction;
-use App\Actions\Api\AuthActions\ForgotPasswordAction;
 use App\Actions\Api\AuthActions\LoginAction;
 use App\Actions\Api\AuthActions\LogoutAction;
 use App\Actions\Api\AuthActions\RegisterAction;
@@ -11,11 +10,13 @@ use App\Actions\Api\AuthActions\ResetPasswordAction;
 use App\Actions\Api\AuthActions\SwitchRoleAction;
 use App\Actions\Api\AuthActions\UpdatePasswordAction;
 use App\Actions\Api\AuthActions\VerifyEmailAction;
+use App\DTOs\VerificationCodeData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Http\Requests\Api\ResetPasswordRequest;
 use App\Http\Requests\Api\UpdatePasswordRequest;
+use App\Http\Requests\Api\VerificationCodeRequest;
 use App\Http\Resources\UserResource;
 use Dedoc\Scramble\Attributes\Group;
 use Exception;
@@ -74,25 +75,20 @@ class AuthController extends Controller
     }
 
     /**
-     * Forgot Password
+     * Verification Code
      *
-     * Send verification code for updating the password of the user.
-     *
-     * @unauthenticated
+     * Send verification code to the user.
      *
      * @return JsonResponse
      */
-    public function forgotPassword(Request $request, ForgotPasswordAction $forgotPasswordAction)
+    public function verificationCode(VerificationCodeRequest $request, CreateVerificationCodeAction $createVerificationCodeAction)
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255', 'exists:users,email'],
-        ]);
-
-        $verificationCode = $forgotPasswordAction->handle($validated);
+        $verificationCodeData = VerificationCodeData::fromRequest($request);
+        $verificationCode = $createVerificationCodeAction->handle();
 
         return response()->json([
             'message' => trans('success.otp_sent'),
-            'password_reset_token' => $verificationCode->token,
+            'verification_token' => $verificationCode->token,
         ]);
     }
 
@@ -131,23 +127,6 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => trans('success.password_updated'),
-        ]);
-    }
-
-    /**
-     * Verification Code
-     *
-     * Send verification code to the user.
-     *
-     * @return JsonResponse
-     */
-    public function verificationCode(Request $request, CreateVerificationCodeAction $createVerificationCodeAction)
-    {
-        $verificationCode = $createVerificationCodeAction->handle($request->user());
-
-        return response()->json([
-            'message' => trans('success.otp_sent'),
-            'verification_token' => $verificationCode->token,
         ]);
     }
 

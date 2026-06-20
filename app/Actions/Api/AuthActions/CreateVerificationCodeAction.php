@@ -3,9 +3,9 @@
 namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
-use App\Models\User;
+use App\DTOs\VerificationCodeData;
+use App\Events\SendVerificationCodeEvent;
 use App\Models\VerificationCode;
-use App\Notifications\SendVerificationCode;
 use Illuminate\Support\Str;
 
 class CreateVerificationCodeAction extends BaseAction
@@ -13,16 +13,22 @@ class CreateVerificationCodeAction extends BaseAction
     /**
      * Perform the action
      */
-    public function handle(User $user): VerificationCode
+    public function handle(VerificationCodeData $verificationCodeData): VerificationCode
     {
         $verificationCode = VerificationCode::create([
-            'email' => $user->email,
+            'purpose' => $verificationCodeData->purpose,
+            'identifier_key' => $verificationCodeData->identifier_key,
+            'identifier_value' => $verificationCodeData->identifier_value,
             'code' => random_int(100000, 999999),
             'expire_at' => now()->addMinutes(5),
             'token' => Str::uuid(),
         ]);
 
-        $user->notify(new SendVerificationCode($verificationCode->code));
+        SendVerificationCodeEvent::dispatch(
+            $verificationCode->identifier_key,
+            $verificationCode->identifier_value,
+            $verificationCode->code
+        );
 
         return $verificationCode;
     }

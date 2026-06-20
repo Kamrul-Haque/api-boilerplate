@@ -30,7 +30,7 @@ class ResetPasswordAction extends BaseAction
             throw ValidationException::withMessages(['verification_code' => trans('common.verification_code_expired')]);
         }
 
-        $user = User::where('email', $verificationCode->email)->first();
+        $user = User::where($verificationCode->identifier_key, $verificationCode->identifier_value)->first();
 
         $user->forceFill(['password' => bcrypt($validated['password'])])
             ->save();

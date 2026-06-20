@@ -16,8 +16,9 @@ class SendVerificationCodeEvent
      * Create a new event instance.
      */
     public function __construct(
-        public string $email,
-        public int $code
+        public string $identifierKey,
+        public string $identifierValue,
+        public string $code
     ) {}
 
     /**

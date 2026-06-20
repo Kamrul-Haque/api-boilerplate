@@ -20,6 +20,6 @@ class SendVerificationCodeListener implements ShouldQueue
      */
     public function handle(SendVerificationCodeEvent $event): void
     {
-        $this->notificationService->sendVerificationCode($event->email, $event->code);
+        $this->notificationService->sendVerificationCode($event->identifierKey, $event->identifierValue, $event->code);
     }
 }

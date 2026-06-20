@@ -13,9 +13,11 @@
         "ext-mbstring": "*",
         "aws/aws-sdk-php": "^3.351",
         "dedoc/scramble": "^0.12.18",
+        "guzzlehttp/guzzle": "^7.12",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "laravel/vonage-notification-channel": "^3.3",
         "league/flysystem-aws-s3-v3": "^3.0",
         "opcodesio/log-viewer": "^3.18"
     },
