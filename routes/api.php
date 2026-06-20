@@ -12,14 +12,13 @@ Route::post('register', [ApiControllers\AuthController::class, 'register']);
 Route::post('login', [ApiControllers\AuthController::class, 'login'])
     ->name('login')
     ->middleware('throttle:login');
-Route::post('forgot-password', [ApiControllers\AuthController::class, 'forgotPassword']);
+Route::post('verification-code', [ApiControllers\AuthController::class, 'verificationCode']);
 Route::post('reset-password', [ApiControllers\AuthController::class, 'resetPassword']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('profile', [ApiControllers\ProfileController::class, 'show']);
     Route::put('profile', [ApiControllers\ProfileController::class, 'update']);
     Route::put('update-password', [ApiControllers\AuthController::class, 'updatePassword']);
-    Route::post('verification-code', [ApiControllers\AuthController::class, 'verificationCode']);
     Route::put('verify-email', [ApiControllers\AuthController::class, 'verifyEmail']);
     Route::put('switch-role', [ApiControllers\AuthController::class, 'switchRole']);
     Route::post('logout', [ApiControllers\AuthController::class, 'logout']);
