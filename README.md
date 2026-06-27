@@ -8,6 +8,7 @@ A Rest API backend development boilerplate using Laravel framework.
 - API Documentation using [Scramble](https://scramble.dedoc.co/).
 - CRUD Generation Helper using Action/Command Pattern
   using [action-crud-helper](https://packagist.org/packages/kamrul-haque/action-crud-helper).
+- Dynamic Role based Access Control (RBAC) System.
 - Efficient PHP Backed Enum Handling using Cast & Trait.
 - Auto Created by User Log using Trait and Database Table.
 - Global Data Time Format and Timezone Conversion using Cast & Service Class (Facade Pattern).
