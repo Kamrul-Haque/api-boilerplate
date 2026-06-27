@@ -3,6 +3,7 @@
 namespace App\Actions\Api\ModuleActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\ModuleData;
 use App\Models\Module;
 use App\Services\AccessControlService;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +16,10 @@ class StoreModuleAction extends BaseAction
      *
      * @throws Throwable
      */
-    public function handle(mixed $validated): Module
+    public function handle(ModuleData $moduleData): Module
     {
-        return DB::transaction(function () use ($validated) {
-            $module = Module::create($validated);
+        return DB::transaction(function () use ($moduleData) {
+            $module = Module::create($moduleData->toArray());
 
             AccessControlService::createPermissions($module);
 

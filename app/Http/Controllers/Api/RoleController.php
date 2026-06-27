@@ -7,6 +7,7 @@ use App\Actions\Api\RoleActions\IndexRoleAction;
 use App\Actions\Api\RoleActions\ShowRoleAction;
 use App\Actions\Api\RoleActions\StoreRoleAction;
 use App\Actions\Api\RoleActions\UpdateRoleAction;
+use App\DTOs\Api\RoleData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\RoleRequest;
 use App\Http\Resources\RoleIndexResource;
@@ -43,7 +44,6 @@ class RoleController extends Controller implements HasMiddleware
     #[QueryParameter('sortBy', description: 'Column name to sort data by.', type: 'string', default: 'id', example: 'name')]
     #[QueryParameter('sortDesc', description: 'Sort direction descending or ascending.', type: 'boolean', example: false)]
     #[QueryParameter('perPage', description: 'Number of items per page.', type: 'int', default: 30, example: 10)]
-    #[QueryParameter('hide_reserved', description: 'Filter roles by hiding reserved ones.', type: 'string', format: 'boolean', example: true)]
     public function index(Request $request, IndexRoleAction $indexRoleAction)
     {
         $data = $indexRoleAction->handle($request);
@@ -60,7 +60,8 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function store(RoleRequest $request, StoreRoleAction $storeRoleAction)
     {
-        $role = $storeRoleAction->handle($request->validated());
+        $roleData = RoleData::fromRequest($request);
+        $role = $storeRoleAction->handle($roleData);
 
         return RoleShowResource::make($role);
     }
@@ -86,7 +87,8 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function update(RoleRequest $request, Role $role, UpdateRoleAction $updateRoleAction)
     {
-        $role = $updateRoleAction->handle($request->validated(), $role);
+        $roleData = RoleData::fromRequest($request);
+        $role = $updateRoleAction->handle($roleData, $role);
 
         return RoleShowResource::make($role);
     }

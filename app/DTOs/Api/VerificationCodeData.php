@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs;
+namespace App\DTOs\Api;
 
 use App\Enums\VerificationCodeIdentifierKey;
 use App\Enums\VerificationCodePurpose;

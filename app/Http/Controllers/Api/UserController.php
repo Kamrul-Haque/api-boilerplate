@@ -9,7 +9,7 @@ use App\Actions\Api\UserActions\IndexUserAction;
 use App\Actions\Api\UserActions\ShowUserAction;
 use App\Actions\Api\UserActions\StoreUserAction;
 use App\Actions\Api\UserActions\UpdateUserAction;
-use App\DTOs\UserData;
+use App\DTOs\Api\UserData;
 use App\Exceptions\ClientErrorException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UserImportRequest;

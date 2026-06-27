@@ -3,6 +3,7 @@
 namespace App\Actions\Api\RoleActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\RoleData;
 use App\Models\Role;
 use App\Services\AccessControlService;
 use Illuminate\Support\Arr;
@@ -16,9 +17,10 @@ class StoreRoleAction extends BaseAction
      *
      * @throws Throwable
      */
-    public function handle(mixed $validated): Role
+    public function handle(RoleData $roleData): Role
     {
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($roleData) {
+            $validated = $roleData->toArray();
             $role = Role::create(Arr::except($validated, 'permissions'));
 
             AccessControlService::assignPermissions($role, $validated['permissions']);

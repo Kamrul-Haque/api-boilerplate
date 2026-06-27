@@ -10,7 +10,11 @@ use App\Actions\Api\AuthActions\ResetPasswordAction;
 use App\Actions\Api\AuthActions\SwitchRoleAction;
 use App\Actions\Api\AuthActions\UpdatePasswordAction;
 use App\Actions\Api\AuthActions\VerifyEmailAction;
-use App\DTOs\VerificationCodeData;
+use App\DTOs\Api\LoginData;
+use App\DTOs\Api\RegisterData;
+use App\DTOs\Api\ResetPasswordData;
+use App\DTOs\Api\UpdatePasswordData;
+use App\DTOs\Api\VerificationCodeData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
@@ -43,7 +47,8 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request, RegisterAction $registerAction)
     {
-        $data = $registerAction->handle($request->validated());
+        $registerData = RegisterData::fromRequest($request);
+        $data = $registerAction->handle($registerData);
 
         return response()->json([
             'message' => trans('success.parent_registered'),
@@ -65,7 +70,8 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request, LoginAction $loginAction)
     {
-        $data = $loginAction->handle($request->validated());
+        $loginData = LoginData::fromRequest($request);
+        $data = $loginAction->handle($loginData);
 
         return response()->json([
             'message' => trans('success.login_success'),
@@ -81,10 +87,12 @@ class AuthController extends Controller
      *
      * @return JsonResponse
      */
-    public function verificationCode(VerificationCodeRequest $request, CreateVerificationCodeAction $createVerificationCodeAction)
-    {
+    public function verificationCode(
+        VerificationCodeRequest $request,
+        CreateVerificationCodeAction $createVerificationCodeAction
+    ) {
         $verificationCodeData = VerificationCodeData::fromRequest($request);
-        $verificationCode = $createVerificationCodeAction->handle();
+        $verificationCode = $createVerificationCodeAction->handle($verificationCodeData);
 
         return response()->json([
             'message' => trans('success.otp_sent'),
@@ -105,7 +113,8 @@ class AuthController extends Controller
      */
     public function resetPassword(ResetPasswordRequest $request, ResetPasswordAction $resetPasswordAction)
     {
-        $resetPasswordAction->handle($request->validated());
+        $resetPasswordData = ResetPasswordData::fromRequest($request);
+        $resetPasswordAction->handle($resetPasswordData);
 
         return response()->json([
             'message' => trans('success.password_updated'),
@@ -123,7 +132,8 @@ class AuthController extends Controller
      */
     public function updatePassword(UpdatePasswordRequest $request, UpdatePasswordAction $updatePasswordAction)
     {
-        $updatePasswordAction->handle($request->validated(), request()->user());
+        $updatePasswordData = UpdatePasswordData::fromRequest($request);
+        $updatePasswordAction->handle($updatePasswordData, request()->user());
 
         return response()->json([
             'message' => trans('success.password_updated'),

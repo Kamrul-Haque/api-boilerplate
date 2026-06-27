@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Api\ProfileActions\ProfileShowAction;
 use App\Actions\Api\ProfileActions\ProfileUpdateAction;
+use App\DTOs\Api\ProfileData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProfileRequest;
 use App\Http\Resources\UserResource;
@@ -35,7 +36,8 @@ class ProfileController extends Controller
      */
     public function update(ProfileRequest $request, ProfileUpdateAction $updateAction)
     {
-        $user = $updateAction->handle($request->validated(), auth()->user());
+        $profileData = ProfileData::fromRequest($request);
+        $user = $updateAction->handle($profileData, auth()->user());
 
         return UserResource::make($user->refresh());
     }

@@ -3,7 +3,7 @@
 namespace App\Actions\Api\UserActions;
 
 use App\Actions\BaseAction;
-use App\DTOs\UserData;
+use App\DTOs\Api\UserData;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Arr;

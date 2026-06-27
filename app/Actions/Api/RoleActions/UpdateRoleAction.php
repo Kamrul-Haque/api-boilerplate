@@ -3,6 +3,7 @@
 namespace App\Actions\Api\RoleActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\RoleData;
 use App\Enums\ReservedRole;
 use App\Exceptions\ClientErrorException;
 use App\Models\Role;
@@ -20,7 +21,7 @@ class UpdateRoleAction extends BaseAction
      * @throws Exception
      * @throws Throwable
      */
-    public function handle(mixed $validated, Role $role): Role
+    public function handle(RoleData $roleData, Role $role): Role
     {
         $role->authorizeOwnerOrPermission();
 
@@ -32,7 +33,8 @@ class UpdateRoleAction extends BaseAction
             throw new ClientErrorException(trans('common.cannot_modify_own_role'));
         }
 
-        return DB::transaction(function () use ($validated, $role) {
+        return DB::transaction(function () use ($roleData, $role) {
+            $validated = $roleData->toArray();
             $role->update(Arr::except($validated, 'permissions'));
 
             AccessControlService::assignPermissions($role, $validated['permissions']);

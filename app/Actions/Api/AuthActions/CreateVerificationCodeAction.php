@@ -3,7 +3,7 @@
 namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
-use App\DTOs\VerificationCodeData;
+use App\DTOs\Api\VerificationCodeData;
 use App\Events\SendVerificationCodeEvent;
 use App\Models\VerificationCode;
 use Illuminate\Support\Str;

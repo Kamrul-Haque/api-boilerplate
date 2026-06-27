@@ -7,6 +7,7 @@ use App\Actions\Api\PermissionActions\IndexPermissionAction;
 use App\Actions\Api\PermissionActions\ShowPermissionAction;
 use App\Actions\Api\PermissionActions\StorePermissionAction;
 use App\Actions\Api\PermissionActions\UpdatePermissionAction;
+use App\DTOs\Api\PermissionData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PermissionRequest;
 use App\Http\Resources\PermissionResource;
@@ -54,7 +55,8 @@ class PermissionController extends Controller implements HasMiddleware
      */
     public function store(PermissionRequest $request, StorePermissionAction $storePermissionAction)
     {
-        $permission = $storePermissionAction->handle($request->validated());
+        $permissionData = PermissionData::fromRequest($request);
+        $permission = $storePermissionAction->handle($permissionData);
 
         return PermissionResource::make($permission);
     }
@@ -81,7 +83,8 @@ class PermissionController extends Controller implements HasMiddleware
         Permission $permission,
         UpdatePermissionAction $updatePermissionAction
     ) {
-        $permission = $updatePermissionAction->handle($request->validated(), $permission);
+        $permissionData = PermissionData::fromRequest($request);
+        $permission = $updatePermissionAction->handle($permissionData, $permission);
 
         return PermissionResource::make($permission);
     }

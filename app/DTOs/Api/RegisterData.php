@@ -1,41 +1,39 @@
 <?php
 
-namespace App\DTOs;
+namespace App\DTOs\Api;
 
-use App\Http\Requests\Api\UserRequest;
+use App\Http\Requests\Api\RegisterRequest;
 use Illuminate\Http\UploadedFile;
 
-readonly class UserData
+readonly class RegisterData
 {
     /**
-     * Create a new UserData instance.
+     * Create a new RegisterData instance.
      */
     public function __construct(
         public string $name,
         public string $email,
+        public string $password,
         public ?string $phone = null,
         public ?UploadedFile $avatar = null,
-        public ?array $roles = [],
-        public ?int $parent_id = null,
     ) {}
 
     /**
-     * Create a new UserData instance from a UserRequest.
+     * Create a new RegisterData instance from a RegisterRequest.
      */
-    public static function fromRequest(UserRequest $request): self
+    public static function fromRequest(RegisterRequest $request): self
     {
         return new self(
             name: $request->validated('name'),
             email: $request->validated('email'),
+            password: $request->validated('password'),
             phone: $request->validated('phone'),
             avatar: $request->validated('avatar'),
-            roles: $request->validated('roles'),
-            parent_id: $request->validated('parent_id'),
         );
     }
 
     /**
-     * Convert the UserData instance to an array.
+     * Convert the RegisterData instance to an array.
      *
      * @return array<string, mixed>
      */
@@ -44,10 +42,9 @@ readonly class UserData
         return [
             'name' => $this->name,
             'email' => $this->email,
+            'password' => $this->password,
             'phone' => $this->phone,
             'avatar' => $this->avatar,
-            'roles' => $this->roles,
-            'parent_id' => $this->parent_id,
         ];
     }
 }

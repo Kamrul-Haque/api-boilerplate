@@ -3,6 +3,7 @@
 namespace App\Actions\Api\ModuleActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\ModuleData;
 use App\Models\Module;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -14,10 +15,10 @@ class UpdateModuleAction extends BaseAction
      *
      * @throws Throwable
      */
-    public function handle(mixed $validated, Module $module): Module
+    public function handle(ModuleData $moduleData, Module $module): Module
     {
-        return DB::transaction(function () use ($validated, $module) {
-            $module->update($validated);
+        return DB::transaction(function () use ($moduleData, $module) {
+            $module->update($moduleData->toArray());
 
             return $module->refresh()->load('permissions');
         });

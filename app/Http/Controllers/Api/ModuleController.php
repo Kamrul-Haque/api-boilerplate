@@ -7,6 +7,7 @@ use App\Actions\Api\ModuleActions\IndexModuleAction;
 use App\Actions\Api\ModuleActions\ShowModuleAction;
 use App\Actions\Api\ModuleActions\StoreModuleAction;
 use App\Actions\Api\ModuleActions\UpdateModuleAction;
+use App\DTOs\Api\ModuleData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ModuleRequest;
 use App\Http\Resources\ModuleResource;
@@ -57,7 +58,8 @@ class ModuleController extends Controller implements HasMiddleware
      */
     public function store(ModuleRequest $request, StoreModuleAction $storeModuleAction)
     {
-        $module = $storeModuleAction->handle($request->validated());
+        $moduleData = ModuleData::fromRequest($request);
+        $module = $storeModuleAction->handle($moduleData);
 
         return ModuleResource::make($module);
     }
@@ -83,7 +85,8 @@ class ModuleController extends Controller implements HasMiddleware
      */
     public function update(ModuleRequest $request, Module $module, UpdateModuleAction $updateModuleAction)
     {
-        $module = $updateModuleAction->handle($request->validated(), $module);
+        $moduleData = ModuleData::fromRequest($request);
+        $module = $updateModuleAction->handle($moduleData, $module);
 
         return ModuleResource::make($module);
     }

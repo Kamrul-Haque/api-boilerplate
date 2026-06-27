@@ -3,6 +3,7 @@
 namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\RegisterData;
 use App\Models\User;
 use Exception;
 
@@ -13,8 +14,9 @@ class RegisterAction extends BaseAction
      *
      * @throws Exception
      */
-    public function handle(mixed $validated): array
+    public function handle(RegisterData $registerData): array
     {
+        $validated = $registerData->toArray();
         $validated['password'] = bcrypt($validated['password']);
 
         $user = User::create($validated);
