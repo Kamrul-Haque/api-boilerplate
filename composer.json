@@ -12,11 +12,10 @@
         "php": "^8.4",
         "ext-mbstring": "*",
         "aws/aws-sdk-php": "^3.351",
-        "dedoc/scramble": "^0.12.18",
         "guzzlehttp/guzzle": "^7.12",
-        "laravel/framework": "^12.0",
+        "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.9",
+        "laravel/tinker": "^3.0",
         "laravel/vonage-notification-channel": "^3.3",
         "league/flysystem-aws-s3-v3": "^3.0",
         "opcodesio/log-viewer": "^3.18"
@@ -24,14 +23,16 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "kamrul-haque/action-crud-helper": "^4.0",
-        "laravel/boost": "^1.6",
+        "laravel/boost": "^2.0",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
-        "pestphp/pest": "^3.7",
-        "pestphp/pest-plugin-laravel": "^3.1"
+        "phpunit/phpunit": "^12.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "dedoc/scramble": "^0.13.0"
     },
     "autoload": {
         "psr-4": {
