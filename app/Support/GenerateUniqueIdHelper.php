@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Support;
 
 use Illuminate\Support\Str;
 
 /**
  * Generates a unique id
  */
-class GenerateUniqueIdService
+class GenerateUniqueIdHelper
 {
     /**
      * Generates a unique id based on year & time

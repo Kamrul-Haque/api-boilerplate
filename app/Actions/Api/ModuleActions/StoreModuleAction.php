@@ -21,7 +21,7 @@ class StoreModuleAction extends BaseAction
         return DB::transaction(function () use ($moduleData) {
             $module = Module::create($moduleData->toArray());
 
-            AccessControlService::createPermissions($module);
+            app(AccessControlService::class)->createPermissions($module);
 
             return $module->refresh()->load('permissions');
         });

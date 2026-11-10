@@ -37,7 +37,7 @@ class UpdateRoleAction extends BaseAction
             $validated = $roleData->toArray();
             $role->update(Arr::except($validated, 'permissions'));
 
-            AccessControlService::assignPermissions($role, $validated['permissions']);
+            app(AccessControlService::class)->assignPermissions($role, $validated['permissions']);
 
             return $role->refresh()->load(['permissions', 'permissions.module']);
         });

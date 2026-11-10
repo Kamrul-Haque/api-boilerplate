@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\ReservedRole;
 use App\Models\User;
+use App\Services\AccessControlService;
 use Carbon\Carbon;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
@@ -24,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AccessControlService::class);
     }
 
     /**

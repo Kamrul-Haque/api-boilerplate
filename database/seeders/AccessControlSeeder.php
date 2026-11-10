@@ -13,10 +13,10 @@ class AccessControlSeeder extends Seeder
      *
      * @throws Exception
      */
-    public function run(): void
+    public function run(AccessControlService $accessControlService): void
     {
-        AccessControlService::truncateAndCreateDefaultModulesWithPermissions();
-        AccessControlService::truncateAndCreateDefaultRolesAndAssignPermissions();
-        AccessControlService::truncateAndCreateDefaultUsersAndAssignRoles();
+        $accessControlService->truncateAndCreateDefaultModulesWithPermissions();
+        $accessControlService->truncateAndCreateDefaultRolesAndAssignPermissions();
+        $accessControlService->truncateAndCreateDefaultUsersAndAssignRoles();
     }
 }

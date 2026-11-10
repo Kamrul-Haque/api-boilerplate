@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Services\DatetimeConversionService;
+use App\Support\DatetimeConversionHelper;
 
 /**
  *  Formats duration attribute of the model
@@ -15,7 +15,7 @@ trait HasDuration
     public function getDurationAttribute($value): ?string
     {
         if ($value) {
-            return DatetimeConversionService::convertMinutesToDiffHuman($value);
+            return DatetimeConversionHelper::convertMinutesToDiffHuman($value);
         }
 
         return null;

@@ -2,7 +2,7 @@
 
 namespace App\Casts;
 
-use App\Services\DatetimeConversionService;
+use App\Support\DatetimeConversionHelper;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +21,7 @@ class LocalDateTime implements CastsAttributes
             : config('app.timezone');
 
         if (! is_null($value)) {
-            return (object) DatetimeConversionService::convertToLocal(
+            return (object) DatetimeConversionHelper::convertToLocal(
                 $value,
                 $timezone,
                 config('app.date_format'),
@@ -59,6 +59,6 @@ class LocalDateTime implements CastsAttributes
             return $attributes[$key] ?? null;
         }
 
-        return DatetimeConversionService::convertToUTC($value, $timezone);
+        return DatetimeConversionHelper::convertToUTC($value, $timezone);
     }
 }

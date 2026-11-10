@@ -28,3 +28,9 @@ CLAUDE.md
 /.gemini
 .cursorrules
 GEMINI.md
+.agents
+.claude
+opencode.json
+AGENTS.md
+.mcp.json
+

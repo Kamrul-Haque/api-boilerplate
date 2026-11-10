@@ -12,7 +12,7 @@ beforeEach(/**
         'password' => 'hashed',
     ]);
 
-    AccessControlService::truncateAndCreateDefaultRolesAndAssignPermissions();
+    app(AccessControlService::class)->truncateAndCreateDefaultRolesAndAssignPermissions();
     $this->user->assignRole('admin');
     $this->user->assignRole('super-admin');
 });

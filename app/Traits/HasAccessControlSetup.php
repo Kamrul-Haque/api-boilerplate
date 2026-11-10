@@ -19,9 +19,10 @@ trait HasAccessControlSetup
      */
     protected function setUpAccessControl(): void
     {
-        AccessControlService::truncateAndCreateDefaultModulesWithPermissions();
-        AccessControlService::truncateAndCreateDefaultRolesAndAssignPermissions();
-        AccessControlService::truncateAndCreateDefaultUsersAndAssignRoles();
+        $accessControlService = app(AccessControlService::class);
+        $accessControlService->truncateAndCreateDefaultModulesWithPermissions();
+        $accessControlService->truncateAndCreateDefaultRolesAndAssignPermissions();
+        $accessControlService->truncateAndCreateDefaultUsersAndAssignRoles();
 
         $this->systemAdmin = User::find(ReservedRole::SYSTEM_ADMIN->value);
         $this->user = Role::where('name', 'user')->first()?->users()->first();

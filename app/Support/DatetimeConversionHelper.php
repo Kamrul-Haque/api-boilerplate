@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Support;
 
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 
-class DatetimeConversionService
+class DatetimeConversionHelper
 {
     /**
      * Converts 'UTC' timestamp to local timestamp or format

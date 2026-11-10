@@ -33,7 +33,7 @@ abstract class BaseAction
         }
 
         foreach ($methods as $method) {
-            if ($method->getName() !== 'handle' && $method->class === $reflection->getName()) {
+            if ($method->getName() !== 'handle' && $method->getName() !== '__construct' && $method->class === $reflection->getName()) {
                 throw new Exception("public method '{$method->getName()}' is not allowed in class '{$method->class}'.");
             }
         }

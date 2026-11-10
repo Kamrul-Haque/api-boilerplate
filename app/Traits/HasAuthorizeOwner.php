@@ -21,6 +21,6 @@ trait HasAuthorizeOwner
             ? $this->getAdditionalOwnerCheck()
             : null;
 
-        AccessControlService::authorizeOwnerOrPermission($this, $permission, $additionalCheck);
+        app(AccessControlService::class)->authorizeOwnerOrPermission($this, $permission, $additionalCheck);
     }
 }

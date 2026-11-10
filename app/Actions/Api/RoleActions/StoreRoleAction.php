@@ -23,7 +23,7 @@ class StoreRoleAction extends BaseAction
             $validated = $roleData->toArray();
             $role = Role::create(Arr::except($validated, 'permissions'));
 
-            AccessControlService::assignPermissions($role, $validated['permissions']);
+            app(AccessControlService::class)->assignPermissions($role, $validated['permissions']);
 
             return $role->refresh()->load(['permissions', 'permissions.module']);
         });

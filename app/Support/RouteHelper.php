@@ -1,13 +1,15 @@
 <?php
 
-namespace App\Services;
+namespace App\Support;
 
 use Illuminate\Support\Facades\Route;
 
-class RouteService
+class RouteHelper
 {
-    private static array $excluded = ['profile', 'logout', 'verification-code', 'verify-email', 'update-password',
-        'switch-role', 'route-prefixes'];
+    private static array $excluded = [
+        'profile', 'logout', 'verification-code', 'verify-email', 'update-password',
+        'switch-role', 'route-prefixes',
+    ];
 
     public static function getAllRoutePrefixes(): array
     {

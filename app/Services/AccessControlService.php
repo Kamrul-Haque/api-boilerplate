@@ -8,9 +8,13 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Exception;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Schema\Builder as SchemaBuilder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -19,7 +23,7 @@ class AccessControlService
     /**
      * Modules of the application
      */
-    private static array $modules = [
+    protected array $modules = [
         [
             'name' => 'Users', 'route_prefix' => 'users',
             'description' => 'Manage access for user management functionalities.',
@@ -41,7 +45,7 @@ class AccessControlService
     /**
      * Basic permissions required for CRUD operation
      */
-    private static array $basePermissions = [
+    protected array $basePermissions = [
         ['name' => 'view', 'display_name' => 'View', 'is_assignable' => true],
         ['name' => 'view-all', 'display_name' => 'View All', 'is_assignable' => true],
         ['name' => 'create', 'display_name' => 'Create', 'is_assignable' => true],
@@ -52,7 +56,7 @@ class AccessControlService
     /**
      * Modules that different permissions than base permissions required for CRUD operation
      */
-    private static array $specialModules = [
+    protected array $specialModules = [
         [
             'name' => 'Trash', 'route_prefix' => 'trashes',
             'description' => 'Manage access for trashed data management functionalities.',
@@ -62,7 +66,7 @@ class AccessControlService
     /**
      * Permissions by module route_prefix required for additional functionalities other than CRUD operation
      */
-    private static array $additionalPermissions = [
+    protected array $additionalPermissions = [
         'users' => [
             ['name' => 'assign-roles', 'display_name' => 'Assign Roles', 'is_assignable' => true],
         ],
@@ -77,7 +81,7 @@ class AccessControlService
     /**
      * Default roles of the application
      */
-    private static array $roles = [
+    protected array $roles = [
         [
             'display_name' => 'System Admin',
             'name' => 'system-admin',
@@ -107,7 +111,7 @@ class AccessControlService
     /**
      * Default users of the system
      */
-    private static array $users = [
+    protected array $users = [
         ['name' => 'System Admin', 'email' => 'system@admin.com'],
         ['name' => 'Super Admin', 'email' => 'super@admin.com'],
         ['name' => 'Mr. Admin', 'email' => 'admin@email.com'],
@@ -115,63 +119,82 @@ class AccessControlService
     ];
 
     /**
+     * Create a new AccessControlService instance.
+     */
+    public function __construct(
+        protected DatabaseManager $db,
+        protected AuthFactory $auth,
+        protected Hasher $hasher,
+        protected Application $app,
+        protected Translator $translator,
+    ) {}
+
+    /**
+     * Get the database schema builder instance.
+     */
+    protected function schema(): SchemaBuilder
+    {
+        return $this->db->getSchemaBuilder();
+    }
+
+    /**
      * Get a list of modules for seeding access control
      */
-    public static function getModules(): array
+    public function getModules(): array
     {
-        return self::$modules;
+        return $this->modules;
     }
 
     /**
      * Get base permissions to auto-generate for each module
      */
-    public static function getBasePermissions(): array
+    public function getBasePermissions(): array
     {
-        return self::$basePermissions;
+        return $this->basePermissions;
     }
 
     /**
-     * Truncate the role & permissions table and create default roles with permissions
+     * Truncate the role & permissions table and create default modules with permissions
      */
-    public static function truncateAndCreateDefaultModulesWithPermissions(): void
+    public function truncateAndCreateDefaultModulesWithPermissions(): void
     {
-        if (Schema::hasTable('modules') && DB::table('modules')->count()) {
-            DB::table('modules')->delete();
-            DB::statement('ALTER TABLE modules AUTO_INCREMENT = 1;');
+        if ($this->schema()->hasTable('modules') && $this->db->table('modules')->count()) {
+            $this->db->table('modules')->delete();
+            $this->db->statement('ALTER TABLE modules AUTO_INCREMENT = 1;');
         }
 
-        if (Schema::hasTable('permissions') && DB::table('permissions')->count()) {
-            DB::table('permissions')->delete();
-            DB::statement('ALTER TABLE permissions AUTO_INCREMENT = 1;');
+        if ($this->schema()->hasTable('permissions') && $this->db->table('permissions')->count()) {
+            $this->db->table('permissions')->delete();
+            $this->db->statement('ALTER TABLE permissions AUTO_INCREMENT = 1;');
         }
 
-        $modules = self::$modules;
-        $specialModules = self::$specialModules;
+        $modules = $this->modules;
+        $specialModules = $this->specialModules;
 
         foreach ($modules as $module) {
             $module = Module::create($module);
 
-            self::createPermissions($module);
+            $this->createPermissions($module);
 
-            self::createAdditionalPermissions($module);
+            $this->createAdditionalPermissions($module);
         }
 
         foreach ($specialModules as $module) {
             $module = Module::create($module);
 
-            self::createAdditionalPermissions($module);
+            $this->createAdditionalPermissions($module);
         }
     }
 
     /**
      * Create corresponding permissions for a given module
      */
-    public static function createPermissions(Module $module, ?string $routePrefix = null): void
+    public function createPermissions(Module $module, ?string $routePrefix = null): void
     {
-        $basePermissions = self::$basePermissions;
+        $basePermissions = $this->basePermissions;
         $routePrefix = $routePrefix ?? $module->route_prefix;
 
-        $systemAdminRole = Schema::hasTable('roles') ? Role::where('name', 'system-admin')->first() : null;
+        $systemAdminRole = $this->schema()->hasTable('roles') ? Role::where('name', 'system-admin')->first() : null;
 
         foreach ($basePermissions as $basePermission) {
             $permission = null;
@@ -195,9 +218,9 @@ class AccessControlService
     /**
      * Creates additional for the required modules
      */
-    public static function createAdditionalPermissions(Module $module): void
+    public function createAdditionalPermissions(Module $module): void
     {
-        $permissions = self::getAdditionalPermissionsByModule($module->route_prefix);
+        $permissions = $this->getAdditionalPermissionsByModule($module->route_prefix);
 
         if (count($permissions)) {
             foreach ($permissions as $permission) {
@@ -215,9 +238,9 @@ class AccessControlService
     /**
      * Get additional permissions by module
      */
-    public static function getAdditionalPermissionsByModule(string $module): array
+    public function getAdditionalPermissionsByModule(string $module): array
     {
-        $additionalPermissions = collect(self::$additionalPermissions);
+        $additionalPermissions = collect($this->additionalPermissions);
 
         return (array) $additionalPermissions->get($module, []);
     }
@@ -225,19 +248,19 @@ class AccessControlService
     /**
      * Truncate roles table and create default roles
      */
-    public static function truncateAndCreateDefaultRolesAndAssignPermissions(): void
+    public function truncateAndCreateDefaultRolesAndAssignPermissions(): void
     {
-        if (Schema::hasTable('roles') && DB::table('roles')->count()) {
-            DB::table('roles')->delete();
-            DB::statement('ALTER TABLE roles AUTO_INCREMENT = 1;');
+        if ($this->schema()->hasTable('roles') && $this->db->table('roles')->count()) {
+            $this->db->table('roles')->delete();
+            $this->db->statement('ALTER TABLE roles AUTO_INCREMENT = 1;');
         }
 
-        $roles = self::$roles;
+        $roles = $this->roles;
 
         foreach ($roles as $role) {
             $role = Role::create($role);
 
-            $permissions = self::getRoleWiseAssignablePermissions($role->name);
+            $permissions = $this->getRoleWiseAssignablePermissions($role->name);
 
             $role->permissions()->syncWithoutDetaching($permissions);
         }
@@ -246,7 +269,7 @@ class AccessControlService
     /**
      * Get all assignable permissions by the given role name
      */
-    public static function getRoleWiseAssignablePermissions(string $roleName): Collection
+    public function getRoleWiseAssignablePermissions(string $roleName): Collection
     {
         $permissions = collect();
 
@@ -298,27 +321,27 @@ class AccessControlService
      *
      * @throws Exception
      */
-    public static function truncateAndCreateDefaultUsersAndAssignRoles(): void
+    public function truncateAndCreateDefaultUsersAndAssignRoles(): void
     {
-        if (! app()->isProduction()) {
-            if (Schema::hasTable('users') && DB::table('users')->count()) {
-                DB::table('users')->delete();
-                DB::statement('ALTER TABLE users AUTO_INCREMENT = 1;');
+        if (! $this->app->environment('production')) {
+            if ($this->schema()->hasTable('users') && $this->db->table('users')->count()) {
+                $this->db->table('users')->delete();
+                $this->db->statement('ALTER TABLE users AUTO_INCREMENT = 1;');
             }
         }
 
-        $password = bcrypt('Pa$$word');
+        $password = $this->hasher->make('Pa$$word');
 
-        $users = self::$users;
+        $users = $this->users;
 
         foreach ($users as $index => $user) {
             $user['password'] = $password;
 
             $user = User::create($user);
 
-            $user->assignRole(self::$roles[$index]['name']);
+            $user->assignRole($this->roles[$index]['name']);
 
-            if (app()->isProduction()) {
+            if ($this->app->environment('production')) {
                 break;
             }
         }
@@ -327,7 +350,7 @@ class AccessControlService
     /**
      * Assign permissions to a given role
      */
-    public static function assignPermissions(Role $role, array $permissions): void
+    public function assignPermissions(Role $role, array $permissions): void
     {
         $role->permissions()->detach();
 
@@ -356,12 +379,12 @@ class AccessControlService
      *
      * @throws AccessDeniedHttpException
      */
-    public static function authorizeOwnerOrPermission(
+    public function authorizeOwnerOrPermission(
         object $model,
         ?string $permission = null,
         ?callable $additionalCheck = null
     ): void {
-        $user = auth()->user();
+        $user = $this->auth->guard()->user();
 
         if ($user->active_role_id === ReservedRole::SYSTEM_ADMIN->value) {
             return;
@@ -381,6 +404,6 @@ class AccessControlService
             return;
         }
 
-        throw new AccessDeniedHttpException(trans('common.unauthorized_access_permission'));
+        throw new AccessDeniedHttpException($this->translator->get('common.unauthorized_access_permission'));
     }
 }
