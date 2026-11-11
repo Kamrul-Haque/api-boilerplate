@@ -115,8 +115,8 @@ class TokenService
             }
         }
 
-        if ($rawAccessToken) {
-            Cache::forget(PersonalAccessToken::cacheKey($rawAccessToken));
+        if ($rawAccessToken && ($id = PersonalAccessToken::idFromToken($rawAccessToken)) !== null) {
+            Cache::forget(PersonalAccessToken::cacheKeyForId($id));
         }
     }
 

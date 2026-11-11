@@ -40,9 +40,14 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
     public static function findToken($token)
     {
         $parts = explode('|', $token, 2);
-        $plain = count($parts) === 2 ? $parts[1] : $token;
 
-        $cacheKey = static::cacheKey($token);
+        if (count($parts) !== 2) {
+            return parent::findToken($token);
+        }
+
+        [$id, $plain] = $parts;
+
+        $cacheKey = static::cacheKeyForId($id);
 
         $cached = Cache::get($cacheKey);
 
@@ -68,15 +73,13 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
     }
 
     /**
-     * Get the cache key for the given plain text token.
+     * Get the token id from a Sanctum "{id}|{plain}" token.
      */
-    public static function cacheKey(string $token): string
+    public static function idFromToken(string $token): ?string
     {
         $parts = explode('|', $token, 2);
 
-        return count($parts) === 2
-            ? static::cacheKeyForId($parts[0])
-            : config('token.cache_prefix').hash('sha256', $token);
+        return count($parts) === 2 ? $parts[0] : null;
     }
 
     /**

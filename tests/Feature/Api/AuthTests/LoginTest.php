@@ -65,18 +65,34 @@ test('access token verification is cached', function () {
     ])->assertStatus(200);
 
     $accessToken = $login->json('access_token');
+    $tokenId = PersonalAccessToken::idFromToken($accessToken);
 
     $this->withHeader('Authorization', 'Bearer '.$accessToken)
         ->getJson('/api/profile')
         ->assertStatus(200);
 
-    expect(Cache::has(PersonalAccessToken::cacheKey($accessToken)))->toBeTrue();
+    expect(Cache::has(PersonalAccessToken::cacheKeyForId($tokenId)))->toBeTrue();
 
     $this->withHeader('Authorization', 'Bearer '.$accessToken)
         ->postJson('/api/logout')
         ->assertStatus(200);
 
-    expect(Cache::has(PersonalAccessToken::cacheKey($accessToken)))->toBeFalse();
+    expect(Cache::has(PersonalAccessToken::cacheKeyForId($tokenId)))->toBeFalse();
+});
+
+test('legacy plain tokens are authenticated without a hashed cache key', function () {
+    $login = $this->postJson('/api/login', [
+        'email' => $this->user->email,
+        'password' => $this->password,
+    ])->assertStatus(200);
+
+    [, $plainToken] = explode('|', $login->json('access_token'), 2);
+
+    $this->withHeader('Authorization', 'Bearer '.$plainToken)
+        ->getJson('/api/profile')
+        ->assertStatus(200);
+
+    expect(Cache::has(config('token.cache_prefix').hash('sha256', $plainToken)))->toBeFalse();
 });
 
 test('access token plain value must match the cached row', function () {

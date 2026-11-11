@@ -141,7 +141,10 @@ test('password reset revokes all sessions', function () {
         'password_confirmation' => $newPassword,
     ])->assertStatus(200);
 
-    expect(Cache::has(PersonalAccessToken::cacheKey($logins->first()->json('access_token'))))->toBeFalse();
+    $accessToken = $logins->first()->json('access_token');
+    $tokenId = PersonalAccessToken::idFromToken($accessToken);
+
+    expect(Cache::has(PersonalAccessToken::cacheKeyForId($tokenId)))->toBeFalse();
 
     $logins->each(function ($login) {
         $this->app['auth']->forgetGuards();
