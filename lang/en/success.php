@@ -13,6 +13,8 @@
 return [
     'success' => 'Success',
     'login_success' => 'Logged in successfully.',
+    'two_factor_required' => 'Two-factor authentication required.',
+    'token_refreshed' => 'Token refreshed successfully.',
     'otp_sent' => 'Verification code sent successfully. Please check your email.',
     'password_updated' => 'Password updated successfully.',
     'email_verified' => 'Email verified successfully.',

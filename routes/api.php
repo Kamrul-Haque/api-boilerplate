@@ -12,8 +12,13 @@ Route::post('register', [ApiControllers\AuthController::class, 'register']);
 Route::post('login', [ApiControllers\AuthController::class, 'login'])
     ->name('login')
     ->middleware('throttle:login');
-Route::post('verification-code', [ApiControllers\AuthController::class, 'verificationCode']);
+Route::post('verification-code', [ApiControllers\AuthController::class, 'verificationCode'])
+    ->middleware('throttle:verification-code');
 Route::post('reset-password', [ApiControllers\AuthController::class, 'resetPassword']);
+Route::post('refresh-token', [ApiControllers\AuthController::class, 'refreshToken'])
+    ->middleware('throttle:refresh');
+Route::post('verify-two-factor', [ApiControllers\AuthController::class, 'verifyTwoFactor'])
+    ->middleware('throttle:two-factor');
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('profile', [ApiControllers\ProfileController::class, 'show']);

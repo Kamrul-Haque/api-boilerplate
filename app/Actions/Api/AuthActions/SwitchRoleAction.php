@@ -13,7 +13,7 @@ class SwitchRoleAction extends BaseAction
      */
     public function handle(int $role_id, User $user): User
     {
-        if (! $user->roles->contains($role_id)) {
+        if (! $user->roles->contains('id', $role_id)) {
             throw ValidationException::withMessages(['role' => trans('common.role_not_found')]);
         }
 

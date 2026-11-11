@@ -5,6 +5,7 @@ namespace App\Actions\Api\UserActions;
 use App\Actions\BaseAction;
 use App\DTOs\Api\UserData;
 use App\Models\User;
+use App\Services\TokenService;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -37,11 +38,18 @@ class UpdateUserAction extends BaseAction
 
         return DB::transaction(function () use ($validated, $user) {
             if (isset($validated['roles'])) {
+                $currentRoles = $user->roles()->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+                $newRoles = collect($validated['roles'])->map(fn ($id) => (int) $id)->sort()->values()->all();
+
                 $validated['active_role_id'] = $validated['roles'][0];
                 $user->roles()->detach();
 
                 foreach ($validated['roles'] as $role) {
                     $user->assignRole((int) $role);
+                }
+
+                if ($currentRoles !== $newRoles) {
+                    app(TokenService::class)->revokeAll($user);
                 }
             }
 

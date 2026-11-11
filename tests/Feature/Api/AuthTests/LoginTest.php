@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     $this->password = 'Password@12345';
@@ -46,8 +48,56 @@ test('login response is correct', function () {
         ->assertJsonStructure([
             'message',
             'token',
+            'access_token',
+            'refresh_token',
+            'token_type',
+            'expires_in',
             'user' => ['id', 'name', 'email', 'phone', 'avatar'],
-        ]);
+        ])
+        ->assertJsonPath('token_type', 'Bearer')
+        ->assertJsonPath('expires_in', 3600);
+});
+
+test('access token verification is cached', function () {
+    $login = $this->postJson('/api/login', [
+        'email' => $this->user->email,
+        'password' => $this->password,
+    ])->assertStatus(200);
+
+    $accessToken = $login->json('access_token');
+
+    $this->withHeader('Authorization', 'Bearer '.$accessToken)
+        ->getJson('/api/profile')
+        ->assertStatus(200);
+
+    expect(Cache::has(PersonalAccessToken::cacheKey($accessToken)))->toBeTrue();
+
+    $this->withHeader('Authorization', 'Bearer '.$accessToken)
+        ->postJson('/api/logout')
+        ->assertStatus(200);
+
+    expect(Cache::has(PersonalAccessToken::cacheKey($accessToken)))->toBeFalse();
+});
+
+test('access token plain value must match the cached row', function () {
+    $login = $this->postJson('/api/login', [
+        'email' => $this->user->email,
+        'password' => $this->password,
+    ])->assertStatus(200);
+
+    $accessToken = $login->json('access_token');
+
+    [$id] = explode('|', $accessToken, 2);
+
+    $this->withHeader('Authorization', 'Bearer '.$accessToken)
+        ->getJson('/api/profile')
+        ->assertStatus(200);
+
+    $this->app['auth']->forgetGuards();
+
+    $this->withHeader('Authorization', 'Bearer '.$id.'|tampered')
+        ->getJson('/api/profile')
+        ->assertStatus(401);
 });
 
 test('rate limit works properly', function () {

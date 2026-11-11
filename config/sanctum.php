@@ -68,6 +68,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Track Last Used At
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, Sanctum writes the token's last used timestamp on every
+    | authenticated request. Token verification is cache-first, so this is
+    | disabled by default to avoid a database write on each request.
+    |
+    */
+
+    'last_used_at' => env('SANCTUM_LAST_USED_AT', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Sanctum Middleware
     |--------------------------------------------------------------------------
     |

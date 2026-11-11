@@ -25,10 +25,32 @@ class VerificationCodeRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $isTwoFactor = $this->input('purpose') === VerificationCodePurpose::TWO_FACTOR->value;
+
+        $rules = [
             'purpose' => ['required', 'string', Rule::in(VerificationCodePurpose::values())],
-            'identifier_key' => ['required', 'string', Rule::in(VerificationCodeIdentifierKey::values())],
-            'identifier_value' => ['required', 'string', Rule::exists('users', $this->identifier_key)],
+            'verification_token' => [
+                Rule::requiredIf($isTwoFactor),
+                'nullable',
+                'uuid',
+            ],
+            'identifier_key' => [
+                Rule::requiredIf(! $isTwoFactor),
+                'nullable',
+                'string',
+                Rule::in(VerificationCodeIdentifierKey::values()),
+            ],
+            'identifier_value' => [
+                Rule::requiredIf(! $isTwoFactor),
+                'nullable',
+                'string',
+            ],
         ];
+
+        if (! $isTwoFactor) {
+            $rules['identifier_value'][] = Rule::exists('users', (string) $this->input('identifier_key'));
+        }
+
+        return $rules;
     }
 }

@@ -2,245 +2,175 @@
 
 namespace App\Services;
 
-use App\DTOs\GenerateOneClickLoginTokenRequestData;
-use App\DTOs\ParsedTokenData;
-use App\DTOs\TokenPayloadData;
-use Carbon\Carbon;
+use App\DTOs\Token\TokenPairData;
+use App\Models\PersonalAccessToken;
+use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Laravel\Sanctum\NewAccessToken;
 
 class TokenService
 {
-    public const string JWT = 'jwt';
-
-    public const string OPAQUE = 'opaque';
-
     /**
-     * The token format.
+     * Issue an access token and a refresh token for the same session.
      */
-    private string $format;
-
-    /**
-     * The signing key.
-     */
-    private ?string $key = null;
-
-    /**
-     * The key ID.
-     */
-    private ?string $kid = null;
-
-    /**
-     * The algorithm used for signing.
-     */
-    private ?string $alg = null;
-
-    /**
-     * Token time to live
-     */
-    private ?int $ttl = null;
-
-    /**
-     * Create a new JwtService instance.
-     */
-    public function __construct(string $format = self::OPAQUE)
+    public function issueTokenPair(User $user, ?string $sessionId = null): TokenPairData
     {
-        $this->format = $format;
+        $sessionId ??= (string) Str::uuid();
 
-        if ($this->format === self::OPAQUE) {
-            $this->key = null;
-        } elseif (config('token.secret') === 'app_key') {
-            $appKey = config('app.key');
+        $accessToken = $this->createToken(
+            $user,
+            config('token.access_name'),
+            ['*'],
+            (int) config('token.access_ttl'),
+            $sessionId
+        );
 
-            if (str_starts_with($appKey, 'base64:')) {
-                $this->key = base64_decode(substr($appKey, 7));
+        $refreshToken = $this->createToken(
+            $user,
+            config('token.refresh_name'),
+            ['refresh'],
+            (int) config('token.refresh_ttl'),
+            $sessionId
+        );
+
+        return new TokenPairData(
+            accessToken: $accessToken->plainTextToken,
+            refreshToken: $refreshToken->plainTextToken,
+            tokenType: 'Bearer',
+            expiresIn: (int) config('token.access_ttl') * 60,
+        );
+    }
+
+    /**
+     * Validate the given refresh token and rotate it into a new token pair.
+     *
+     * @return array{user: User, tokens: TokenPairData}
+     *
+     * @throws AuthenticationException
+     */
+    public function refresh(string $rawRefreshToken): array
+    {
+        $token = PersonalAccessToken::findTokenFresh($rawRefreshToken);
+
+        if (! $token || $token->name !== config('token.refresh_name')) {
+            throw new AuthenticationException(trans('common.unauthorized'));
+        }
+
+        if ($token->revoked_at !== null) {
+            if ($token->session_id) {
+                $this->revokeSession($token->session_id);
+            }
+
+            throw new AuthenticationException(trans('common.unauthorized'));
+        }
+
+        if ($token->expires_at?->isPast()) {
+            throw new AuthenticationException(trans('common.unauthorized'));
+        }
+
+        $user = $token->tokenable;
+
+        if (! $user || (int) $token->token_version !== (int) $user->token_version) {
+            throw new AuthenticationException(trans('common.unauthorized'));
+        }
+
+        $token->forceFill(['revoked_at' => now()])->save();
+
+        if ($token->session_id) {
+            $revokedIds = PersonalAccessToken::where('session_id', $token->session_id)
+                ->where('name', config('token.access_name'))
+                ->pluck('id');
+
+            PersonalAccessToken::where('session_id', $token->session_id)
+                ->where('name', config('token.access_name'))
+                ->delete();
+
+            $revokedIds->each(fn ($id) => Cache::forget(PersonalAccessToken::cacheKeyForId($id)));
+        }
+
+        $tokens = $this->issueTokenPair($user, $token->session_id);
+
+        $user->load(['active_role', 'active_role.permissions', 'roles']);
+
+        return [
+            'user' => $user,
+            'tokens' => $tokens,
+        ];
+    }
+
+    /**
+     * Revoke the current session tokens.
+     */
+    public function revokeCurrent(User $user, ?string $rawAccessToken = null): void
+    {
+        $currentToken = $user->currentAccessToken();
+
+        if ($currentToken instanceof PersonalAccessToken) {
+            if ($currentToken->session_id) {
+                $this->revokeSession($currentToken->session_id);
             } else {
-                $this->key = $appKey;
+                $currentToken->delete();
             }
-        } else {
-            $this->key = config('token.secret');
         }
 
-        $this->kid = config('token.kid');
-        $this->alg = config('token.alg');
-        $this->ttl = config('token.ttl');
-
-        if ($this->format === self::OPAQUE) {
-            if (is_null($this->kid) || is_null($this->ttl)) {
-                throw new HttpException(500, trans('common.configuration_missing'));
-            }
-        } elseif (is_null($this->key) || is_null($this->kid) || is_null($this->alg) || is_null($this->ttl)) {
-            throw new HttpException(500, trans('common.configuration_missing'));
+        if ($rawAccessToken) {
+            Cache::forget(PersonalAccessToken::cacheKey($rawAccessToken));
         }
     }
 
     /**
-     * Generate an encrypted JWT token.
+     * Revoke all tokens belonging to the given session.
      */
-    public function generate(GenerateOneClickLoginTokenRequestData $data): TokenPayloadData
+    public function revokeSession(string $sessionId): void
     {
-        $now = Carbon::now();
+        $revokedIds = PersonalAccessToken::where('session_id', $sessionId)->pluck('id');
 
-        $header = [
-            'alg' => $this->alg,
-            'typ' => $this->format === self::OPAQUE ? self::OPAQUE : self::JWT,
-            'kid' => $this->kid,
-        ];
+        PersonalAccessToken::where('session_id', $sessionId)->delete();
 
-        $payload = [
-            'jti' => $data->jti ?? (string) Str::uuid(),
-            'site_id' => $data->siteId,
-            'session_role' => $data->sessionRole,
-            'user_id' => $data->userId,
-            'user_name' => $data->userName,
-            'iat' => $now->timestamp,
-            'exp' => $now->copy()->addSeconds($this->ttl)->timestamp,
-            'nbf' => $now->timestamp,
-            'ip' => $data->ip,
-            'user_agent' => $data->userAgent,
-        ];
+        $revokedIds->each(fn ($id) => Cache::forget(PersonalAccessToken::cacheKeyForId($id)));
 
-        $base64UrlHeader = $this->base64UrlEncode(json_encode($header));
-        $base64UrlPayload = $this->base64UrlEncode(json_encode($payload));
-
-        if ($this->format === self::JWT) {
-            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $this->key, true);
-            $base64UrlSignature = $this->base64UrlEncode($signature);
-        } else {
-            $base64UrlSignature = null;
-        }
-
-        if ($this->format === self::JWT) {
-            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
-        } else {
-            $token = Crypt::encryptString($base64UrlPayload);
-        }
-
-        return $this->parsePayloadData($payload, $token);
-    }
-
-    /**
-     * Parse payload data to DTO
-     */
-    private function parsePayloadData(array $payload, ?string $token = null): TokenPayloadData
-    {
-        return new TokenPayloadData(
-            token: $token,
-            jti: $payload['jti'],
-            sessionRole: $payload['session_role'],
-            siteId: $payload['site_id'],
-            iat: $payload['iat'],
-            exp: $payload['exp'],
-            nbf: $payload['nbf'],
-            userId: $payload['user_id'],
-            userName: $payload['user_name'],
-            clientIp: $payload['ip'],
-            clientUserAgent: $payload['user_agent'],
+        Cache::put(
+            PersonalAccessToken::sessionRevokedKey($sessionId),
+            true,
+            (int) config('token.access_ttl') * 60
         );
     }
 
     /**
-     * Decrypt the token and parse the parts
-     *
-     * @throws AuthenticationException
+     * Revoke all tokens for the user across all devices.
      */
-    public function decryptAndParse(string $rawToken): ParsedTokenData
+    public function revokeAll(User $user): void
     {
-        if ($this->format === self::OPAQUE) {
-            try {
-                $token = Crypt::decryptString($rawToken);
-            } catch (DecryptException $exception) {
-                throw new AuthenticationException(trans('common.invalid_token'));
-            }
+        $revokedIds = $user->tokens()->pluck('id');
 
-            $partsCount = 1;
-        } else {
-            $token = $rawToken;
-            $partsCount = 3;
-        }
+        $user->tokens()->delete();
 
-        $parts = explode('.', $token);
+        $revokedIds->each(fn ($id) => Cache::forget(PersonalAccessToken::cacheKeyForId($id)));
 
-        if (count($parts) !== $partsCount) {
-            throw new AuthenticationException(trans('common.invalid_token'));
-        }
-
-        if ($this->format === self::OPAQUE) {
-            [$base64UrlPayload] = $parts;
-        } else {
-            [$base64UrlHeader, $base64UrlPayload, $base64UrlSignature] = $parts;
-        }
-
-        $payload = json_decode($this->base64UrlDecode($base64UrlPayload), true);
-
-        if (! is_array($payload) || ! isset($payload['jti'])) {
-            throw new AuthenticationException(trans('common.invalid_token'));
-        }
-
-        return new ParsedTokenData(
-            base64UrlHeader: $base64UrlHeader ?? null,
-            base64UrlPayload: $base64UrlPayload,
-            base64UrlSignature: $base64UrlSignature ?? null,
-            payload: $this->parsePayloadData($payload),
-            jti: $payload['jti'],
-            siteId: $payload['site_id'],
-            clientIp: $payload['ip'],
-            clientUserAgent: $payload['user_agent'],
-        );
+        $user->forceFill([
+            'token_version' => ((int) $user->token_version) + 1,
+        ])->save();
     }
 
     /**
-     * Validate and decode an encrypted JWT token.
-     *
-     *
-     * @throws AuthenticationException
+     * Create a token and attach its session metadata.
      */
-    public function validate(ParsedTokenData $parsedTokenData): TokenPayloadData
-    {
-        $payload = $parsedTokenData->payload;
+    private function createToken(
+        User $user,
+        string $name,
+        array $abilities,
+        int $ttlMinutes,
+        string $sessionId
+    ): NewAccessToken {
+        $newAccessToken = $user->createToken($name, $abilities, now()->addMinutes($ttlMinutes));
 
-        $now = Carbon::now()->timestamp;
-        $leeway = 5;
+        $newAccessToken->accessToken->forceFill([
+            'session_id' => $sessionId,
+            'token_version' => (int) ($user->token_version ?? 0),
+        ])->save();
 
-        if ($now > ($payload->exp + $leeway)) {
-            throw new AuthenticationException(trans('common.invalid_token'));
-        }
-
-        if ($now < ($payload->nbf - $leeway)) {
-            throw new AuthenticationException(trans('common.invalid_token'));
-        }
-
-        if ($this->format === self::JWT) {
-            $signature = hash_hmac(
-                'sha256',
-                "$parsedTokenData->base64UrlHeader.$parsedTokenData->base64UrlPayload",
-                $this->key,
-                true);
-
-            if (! hash_equals($this->base64UrlEncode($signature), $parsedTokenData->base64UrlSignature)) {
-                throw new AuthenticationException(trans('common.invalid_token'));
-            }
-        }
-
-        return $payload;
-    }
-
-    /**
-     * Base64Url encode string.
-     */
-    private function base64UrlEncode(string $data): string
-    {
-        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
-    }
-
-    /**
-     * Base64Url decode string.
-     */
-    private function base64UrlDecode(string $data): string
-    {
-        return base64_decode(str_replace(['-', '_'], ['+', '/'], $data));
+        return $newAccessToken;
     }
 }

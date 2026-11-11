@@ -138,6 +138,30 @@ class AccessControlService
     }
 
     /**
+     * Reset the auto-increment counter of the given table for the current driver.
+     */
+    protected function resetAutoIncrement(string $table): void
+    {
+        switch ($this->db->connection()->getDriverName()) {
+            case 'mysql':
+            case 'mariadb':
+                $this->db->statement("ALTER TABLE {$table} AUTO_INCREMENT = 1");
+                break;
+            case 'pgsql':
+                $this->db->statement("ALTER SEQUENCE {$table}_id_seq RESTART WITH 1");
+                break;
+            case 'sqlite':
+                if ($this->schema()->hasTable('sqlite_sequence')) {
+                    $this->db->table('sqlite_sequence')->where('name', $table)->delete();
+                }
+                break;
+            case 'sqlsrv':
+                $this->db->statement("DBCC CHECKIDENT ('{$table}', RESEED, 0)");
+                break;
+        }
+    }
+
+    /**
      * Get a list of modules for seeding access control
      */
     public function getModules(): array
@@ -158,14 +182,14 @@ class AccessControlService
      */
     public function truncateAndCreateDefaultModulesWithPermissions(): void
     {
-        if ($this->schema()->hasTable('modules') && $this->db->table('modules')->count()) {
+        if ($this->schema()->hasTable('modules')) {
             $this->db->table('modules')->delete();
-            $this->db->statement('ALTER TABLE modules AUTO_INCREMENT = 1;');
+            $this->resetAutoIncrement('modules');
         }
 
-        if ($this->schema()->hasTable('permissions') && $this->db->table('permissions')->count()) {
+        if ($this->schema()->hasTable('permissions')) {
             $this->db->table('permissions')->delete();
-            $this->db->statement('ALTER TABLE permissions AUTO_INCREMENT = 1;');
+            $this->resetAutoIncrement('permissions');
         }
 
         $modules = $this->modules;
@@ -250,9 +274,9 @@ class AccessControlService
      */
     public function truncateAndCreateDefaultRolesAndAssignPermissions(): void
     {
-        if ($this->schema()->hasTable('roles') && $this->db->table('roles')->count()) {
+        if ($this->schema()->hasTable('roles')) {
             $this->db->table('roles')->delete();
-            $this->db->statement('ALTER TABLE roles AUTO_INCREMENT = 1;');
+            $this->resetAutoIncrement('roles');
         }
 
         $roles = $this->roles;
@@ -324,9 +348,9 @@ class AccessControlService
     public function truncateAndCreateDefaultUsersAndAssignRoles(): void
     {
         if (! $this->app->environment('production')) {
-            if ($this->schema()->hasTable('users') && $this->db->table('users')->count()) {
+            if ($this->schema()->hasTable('users')) {
                 $this->db->table('users')->delete();
-                $this->db->statement('ALTER TABLE users AUTO_INCREMENT = 1;');
+                $this->resetAutoIncrement('users');
             }
         }
 

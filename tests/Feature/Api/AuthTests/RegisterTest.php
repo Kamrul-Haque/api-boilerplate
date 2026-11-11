@@ -41,6 +41,11 @@ test('register response is correct', function () {
         ->assertJsonStructure([
             'message',
             'token',
+            'access_token',
+            'refresh_token',
+            'token_type',
+            'expires_in',
             'user' => ['id', 'name', 'email', 'phone', 'avatar'],
-        ]);
+        ])
+        ->assertJsonPath('token_type', 'Bearer');
 });

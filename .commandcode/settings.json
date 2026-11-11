@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(php artisan list)",
+      "Shell(grep:*)",
+      "Shell(php artisan make:action --help)",
+      "Shell(php artisan make:dto --help)",
+      "Shell(for:*)",
+      "Shell(do:*)",
+      "Shell(exit:*)",
+      "Shell(done:*)",
+      "Shell(vendor/bin/pint:*)",
+      "Shell(php artisan test --compact tests/Feature/Api/AuthTests)",
+      "Shell(php artisan test --compact tests/Feature/Api/AuthTests/LogoutTest.php tests/Feature/Api/AuthTests/RefreshTokenTest.php tests/Feature/Api/AuthTests/ResetPasswordTest.php tests/Feature/Api/AuthTests/UpdatePasswordTest.php tests/Feature/Api/AuthTests/SwitchRoleTest.php)",
+      "Shell(php artisan test --compact tests/Feature/Api/AuthTests/SwitchRoleTest.php --filter \"switch role endpoint works properly\")",
+      "Shell(php artisan test --compact)",
+      "Shell(php artisan schedule:list)",
+      "mcp__laravel-boost__last-error",
+      "Shell(DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test --compact tests/Feature/Api/AuthTests/SwitchRoleTest.php tests/Feature/Api/UserTests tests/Feature/Api/RoleTests)",
+      "Shell(DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan tinker --execute dump(DB::connection()->getDriverName());)",
+      "Shell(DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test --compact)",
+      "Shell(vendor/bin/pest:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

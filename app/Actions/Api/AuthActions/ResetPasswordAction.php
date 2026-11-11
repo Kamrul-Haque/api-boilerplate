@@ -4,8 +4,10 @@ namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
 use App\DTOs\Api\ResetPasswordData;
+use App\Enums\VerificationCodePurpose;
 use App\Models\User;
 use App\Models\VerificationCode;
+use App\Services\TokenService;
 use Illuminate\Validation\ValidationException;
 
 class ResetPasswordAction extends BaseAction
@@ -17,7 +19,10 @@ class ResetPasswordAction extends BaseAction
      */
     public function handle(ResetPasswordData $resetPasswordData): void
     {
-        $verificationCode = VerificationCode::where('token', $resetPasswordData->password_reset_token)->first();
+        $verificationCode = VerificationCode::where('token', $resetPasswordData->password_reset_token)
+            ->where('purpose', VerificationCodePurpose::RESET_PASSWORD->value)
+            ->where('is_verified', false)
+            ->first();
 
         if (! $verificationCode) {
             throw ValidationException::withMessages(['password_reset_token' => 'Invalid token.']);
@@ -35,6 +40,8 @@ class ResetPasswordAction extends BaseAction
 
         $user->forceFill(['password' => bcrypt($resetPasswordData->password)])
             ->save();
+
+        app(TokenService::class)->revokeAll($user);
 
         $verificationCode->delete();
     }

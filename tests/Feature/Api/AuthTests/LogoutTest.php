@@ -14,9 +14,26 @@ test('logout works', function () {
         'password' => 'Password@123',
     ]);
 
-    $token = $user->createToken('test')->plainTextToken;
+    $login = $this->postJson('/api/login', [
+        'email' => $user->email,
+        'password' => 'Password@123',
+    ])->assertStatus(200);
 
-    $this->postJson('/api/logout', [], ['Authorization' => 'Bearer '.$token])
+    $accessToken = $login->json('access_token');
+    $refreshToken = $login->json('refresh_token');
+
+    $this->withHeader('Authorization', 'Bearer '.$accessToken)
+        ->postJson('/api/logout')
         ->assertStatus(200);
+
     $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $user->id]);
+
+    $this->app['auth']->forgetGuards();
+
+    $this->withHeader('Authorization', 'Bearer '.$accessToken)
+        ->getJson('/api/profile')
+        ->assertStatus(401);
+
+    $this->postJson('/api/refresh-token', ['refresh_token' => $refreshToken])
+        ->assertStatus(401);
 });

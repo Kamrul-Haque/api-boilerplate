@@ -4,6 +4,7 @@ namespace App\Actions\Api\UserActions;
 
 use App\Actions\BaseAction;
 use App\Models\User;
+use App\Services\TokenService;
 use Exception;
 
 class AssignRolesAction extends BaseAction
@@ -21,6 +22,8 @@ class AssignRolesAction extends BaseAction
         foreach ($roles as $role) {
             $user->assignRole((int) $role);
         }
+
+        app(TokenService::class)->revokeAll($user);
 
         $user->load(['active_role', 'active_role.permissions', 'roles']);
 

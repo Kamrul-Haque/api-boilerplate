@@ -27,6 +27,8 @@ class User extends Authenticatable
     use Notifiable;
     use Trashable;
 
+    public const string DEFAULT_ROLE = 'user';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -67,6 +69,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'route_code_registered' => 'boolean',
+            'token_version' => 'integer',
         ];
     }
 
@@ -90,6 +93,14 @@ class User extends Authenticatable
     public function hasPermission(string $permission): bool
     {
         return $this->permissions()->contains($permission);
+    }
+
+    /**
+     * Determine if the user must complete two-factor authentication at login.
+     */
+    public function requiresTwoFactorAuthentication(): bool
+    {
+        return $this->roles()->where('name', '!=', self::DEFAULT_ROLE)->exists();
     }
 
     /**

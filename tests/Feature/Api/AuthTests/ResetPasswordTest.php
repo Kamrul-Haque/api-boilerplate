@@ -2,8 +2,10 @@
 
 use App\Enums\VerificationCodeIdentifierKey;
 use App\Enums\VerificationCodePurpose;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Models\VerificationCode;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
@@ -108,4 +110,47 @@ test('password reset endpoint works', function () {
         'password' => $newPassword,
     ])
         ->assertStatus(200);
+});
+
+test('password reset revokes all sessions', function () {
+    $verificationCode = VerificationCode::create([
+        'purpose' => VerificationCodePurpose::RESET_PASSWORD->value,
+        'identifier_key' => VerificationCodeIdentifierKey::EMAIL->value,
+        'identifier_value' => $this->user->email,
+        'code' => random_int(100000, 999999),
+        'expire_at' => now()->addMinutes(5),
+        'token' => Str::uuid(),
+    ]);
+    $newPassword = 'NewPassword';
+
+    $logins = collect([1, 2])->map(fn () => $this->postJson('/api/login', [
+        'email' => $this->user->email,
+        'password' => $this->password,
+    ])->assertStatus(200));
+
+    $logins->each(function ($login) {
+        $this->withHeader('Authorization', 'Bearer '.$login->json('access_token'))
+            ->getJson('/api/profile')
+            ->assertStatus(200);
+    });
+
+    $this->postJson('/api/reset-password', [
+        'password_reset_token' => $verificationCode->token,
+        'verification_code' => $verificationCode->code,
+        'password' => $newPassword,
+        'password_confirmation' => $newPassword,
+    ])->assertStatus(200);
+
+    expect(Cache::has(PersonalAccessToken::cacheKey($logins->first()->json('access_token'))))->toBeFalse();
+
+    $logins->each(function ($login) {
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeader('Authorization', 'Bearer '.$login->json('access_token'))
+            ->getJson('/api/profile')
+            ->assertStatus(401);
+
+        $this->postJson('/api/refresh-token', ['refresh_token' => $login->json('refresh_token')])
+            ->assertStatus(401);
+    });
 });

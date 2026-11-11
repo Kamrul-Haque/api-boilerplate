@@ -11,4 +11,5 @@ enum VerificationCodePurpose: string
     case RESET_PASSWORD = 'reset-password';
     case VERIFY_EMAIL = 'verify-email';
     case UPDATE_EMAIL = 'update-email';
+    case TWO_FACTOR = 'two-factor';
 }

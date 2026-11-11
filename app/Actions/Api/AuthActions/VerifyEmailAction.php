@@ -3,6 +3,7 @@
 namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
+use App\Enums\VerificationCodePurpose;
 use App\Models\User;
 use App\Models\VerificationCode;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,10 @@ class VerifyEmailAction extends BaseAction
      */
     public function handle(mixed $validated): void
     {
-        $verificationCode = VerificationCode::where('token', $validated['verification_token'])->first();
+        $verificationCode = VerificationCode::where('token', $validated['verification_token'])
+            ->where('purpose', VerificationCodePurpose::VERIFY_EMAIL->value)
+            ->where('is_verified', false)
+            ->first();
 
         if (! $verificationCode) {
             throw ValidationException::withMessages(['verification_token' => 'Invalid token.']);
@@ -33,7 +37,7 @@ class VerifyEmailAction extends BaseAction
         }
 
         DB::transaction(function () use ($verificationCode) {
-            $user = User::where('email', $verificationCode->email)->first();
+            $user = User::where($verificationCode->identifier_key, $verificationCode->identifier_value)->first();
 
             $user->update(['email_verified_at' => now()]);
 

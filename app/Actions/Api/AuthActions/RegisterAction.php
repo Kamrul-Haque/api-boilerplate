@@ -5,6 +5,7 @@ namespace App\Actions\Api\AuthActions;
 use App\Actions\BaseAction;
 use App\DTOs\Api\RegisterData;
 use App\Models\User;
+use App\Services\TokenService;
 use Exception;
 
 class RegisterAction extends BaseAction
@@ -20,13 +21,11 @@ class RegisterAction extends BaseAction
         $validated['password'] = bcrypt($validated['password']);
 
         $user = User::create($validated);
-        $user->assignRole('user');
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user->assignRole(User::DEFAULT_ROLE);
 
         return [
             'user' => $user,
-            'token' => $token,
+            'tokens' => app(TokenService::class)->issueTokenPair($user),
         ];
     }
 }

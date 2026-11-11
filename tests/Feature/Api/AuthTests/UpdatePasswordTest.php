@@ -47,3 +47,35 @@ test('update password works', function () {
         ->assertStatus(200)
         ->assertJsonStructure(['message']);
 });
+
+test('update password revokes all sessions', function () {
+    $logins = collect([1, 2])->map(fn () => $this->postJson('/api/login', [
+        'email' => $this->user->email,
+        'password' => $this->password,
+    ])->assertStatus(200));
+
+    $logins->each(function ($login) {
+        $this->withHeader('Authorization', 'Bearer '.$login->json('access_token'))
+            ->getJson('/api/profile')
+            ->assertStatus(200);
+    });
+
+    $this->withHeader('Authorization', 'Bearer '.$logins->first()->json('access_token'))
+        ->putJson('/api/update-password', [
+            'current_password' => $this->password,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])
+        ->assertStatus(200);
+
+    $logins->each(function ($login) {
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeader('Authorization', 'Bearer '.$login->json('access_token'))
+            ->getJson('/api/profile')
+            ->assertStatus(401);
+
+        $this->postJson('/api/refresh-token', ['refresh_token' => $login->json('refresh_token')])
+            ->assertStatus(401);
+    });
+});

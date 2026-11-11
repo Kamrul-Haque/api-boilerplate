@@ -4,7 +4,10 @@ namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
 use App\DTOs\Api\LoginData;
+use App\DTOs\Token\TokenPairData;
 use App\Models\User;
+use App\Models\VerificationCode;
+use App\Services\TokenService;
 use Hash;
 use Illuminate\Auth\AuthenticationException;
 
@@ -12,6 +15,8 @@ class LoginAction extends BaseAction
 {
     /**
      * Perform the action
+     *
+     * @return array{user: User, tokens: ?TokenPairData, two_factor: ?VerificationCode}
      *
      * @throws AuthenticationException
      */
@@ -23,12 +28,20 @@ class LoginAction extends BaseAction
             throw new AuthenticationException(trans('common.unauthorized'));
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
         $user->load(['active_role', 'active_role.permissions', 'roles']);
+
+        if ($user->requiresTwoFactorAuthentication()) {
+            return [
+                'user' => $user,
+                'tokens' => null,
+                'two_factor' => app(StartTwoFactorChallengeAction::class)->handle($user),
+            ];
+        }
 
         return [
             'user' => $user,
-            'token' => $token,
+            'tokens' => app(TokenService::class)->issueTokenPair($user),
+            'two_factor' => null,
         ];
     }
 }

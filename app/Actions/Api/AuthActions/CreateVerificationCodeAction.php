@@ -16,12 +16,12 @@ class CreateVerificationCodeAction extends BaseAction
     public function handle(VerificationCodeData $verificationCodeData): VerificationCode
     {
         $verificationCode = VerificationCode::create([
-            'purpose' => $verificationCodeData->purpose,
-            'identifier_key' => $verificationCodeData->identifier_key,
+            'purpose' => $verificationCodeData->purpose->value,
+            'identifier_key' => $verificationCodeData->identifier_key->value,
             'identifier_value' => $verificationCodeData->identifier_value,
-            'code' => random_int(100000, 999999),
+            'code' => (string) random_int(100000, 999999),
             'expire_at' => now()->addMinutes(5),
-            'token' => Str::uuid(),
+            'token' => (string) Str::uuid(),
         ]);
 
         SendVerificationCodeEvent::dispatch(
