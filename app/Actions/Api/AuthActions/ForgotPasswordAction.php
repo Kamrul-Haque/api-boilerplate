@@ -3,13 +3,19 @@
 namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
+use App\DTOs\Api\VerificationCodeData;
+use App\Enums\VerificationCodeIdentifierKey;
+use App\Enums\VerificationCodePurpose;
 use App\Models\User;
 use App\Models\VerificationCode;
-use App\Notifications\SendVerificationCode;
-use Illuminate\Support\Str;
 
 class ForgotPasswordAction extends BaseAction
 {
+    public function __construct(private readonly CreateVerificationCodeAction $createVerificationCodeAction)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      */
@@ -17,15 +23,12 @@ class ForgotPasswordAction extends BaseAction
     {
         $user = User::where('email', $validated['email'])->first();
 
-        $verificationCode = VerificationCode::create([
-            'email' => $user->email,
-            'code' => random_int(100000, 999999),
-            'expire_at' => now()->addMinutes(5),
-            'token' => Str::uuid(),
-        ]);
-
-        $user->notify(new SendVerificationCode($verificationCode->code));
-
-        return $verificationCode;
+        return $this->createVerificationCodeAction->handle(
+            new VerificationCodeData(
+                purpose: VerificationCodePurpose::RESET_PASSWORD,
+                identifier_key: VerificationCodeIdentifierKey::EMAIL,
+                identifier_value: $user->email,
+            )
+        );
     }
 }

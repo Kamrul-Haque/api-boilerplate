@@ -5,15 +5,16 @@ namespace App\Actions;
 use Exception;
 use ReflectionClass;
 use ReflectionMethod;
+use RuntimeException;
 
 abstract class BaseAction
 {
     /**
-     * Blocks creating constructor on child classes and initiates public method validation while creating child object
+     * Initiates public method validation while creating child object
      *
      * @throws Exception
      */
-    final public function __construct()
+    public function __construct()
     {
         $this->validatePublicMethods();
     }
@@ -29,12 +30,12 @@ abstract class BaseAction
         $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
         if (! method_exists($this, 'handle')) {
-            throw new Exception(get_class($this).' must implement handle() method.');
+            throw new RuntimeException(get_class($this).' must implement handle() method.');
         }
 
         foreach ($methods as $method) {
             if ($method->getName() !== 'handle' && $method->getName() !== '__construct' && $method->class === $reflection->getName()) {
-                throw new Exception("public method '{$method->getName()}' is not allowed in class '{$method->class}'.");
+                throw new RuntimeException("public method '{$method->getName()}' is not allowed in class '{$method->class}'.");
             }
         }
     }

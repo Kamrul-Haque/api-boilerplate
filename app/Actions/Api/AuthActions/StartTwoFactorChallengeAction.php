@@ -8,11 +8,20 @@ use App\Enums\VerificationCodeIdentifierKey;
 use App\Enums\VerificationCodePurpose;
 use App\Models\User;
 use App\Models\VerificationCode;
+use Exception;
 
 class StartTwoFactorChallengeAction extends BaseAction
 {
+    public function __construct(
+        private readonly CreateVerificationCodeAction $createVerificationCodeAction
+    ) {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
+     *
+     * @throws Exception
      */
     public function handle(User $user): VerificationCode
     {
@@ -22,7 +31,7 @@ class StartTwoFactorChallengeAction extends BaseAction
             ->where('is_verified', false)
             ->delete();
 
-        return app(CreateVerificationCodeAction::class)->handle(
+        return $this->createVerificationCodeAction->handle(
             new VerificationCodeData(
                 purpose: VerificationCodePurpose::TWO_FACTOR,
                 identifier_key: VerificationCodeIdentifierKey::EMAIL,

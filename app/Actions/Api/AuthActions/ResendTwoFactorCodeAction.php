@@ -7,14 +7,20 @@ use App\DTOs\Api\VerificationCodeData;
 use App\Enums\VerificationCodeIdentifierKey;
 use App\Enums\VerificationCodePurpose;
 use App\Models\VerificationCode;
+use Exception;
 use Illuminate\Validation\ValidationException;
 
 class ResendTwoFactorCodeAction extends BaseAction
 {
+    public function __construct(private readonly CreateVerificationCodeAction $createVerificationCodeAction)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
-     * @throws ValidationException
+     * @throws ValidationException|Exception
      */
     public function handle(string $verificationToken): VerificationCode
     {
@@ -36,7 +42,7 @@ class ResendTwoFactorCodeAction extends BaseAction
 
         $verificationCode->delete();
 
-        return app(CreateVerificationCodeAction::class)->handle(
+        return $this->createVerificationCodeAction->handle(
             new VerificationCodeData(
                 purpose: VerificationCodePurpose::TWO_FACTOR,
                 identifier_key: $identifierKey,

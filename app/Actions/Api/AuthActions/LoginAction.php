@@ -8,17 +8,26 @@ use App\DTOs\Token\TokenPairData;
 use App\Models\User;
 use App\Models\VerificationCode;
 use App\Services\TokenService;
+use Exception;
 use Hash;
 use Illuminate\Auth\AuthenticationException;
 
 class LoginAction extends BaseAction
 {
+    public function __construct(
+        private readonly TokenService $tokenService,
+        private readonly StartTwoFactorChallengeAction $startTwoFactorChallengeAction
+    ) {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
      * @return array{user: User, tokens: ?TokenPairData, two_factor: ?VerificationCode}
      *
      * @throws AuthenticationException
+     * @throws Exception
      */
     public function handle(LoginData $loginData): array
     {
@@ -34,13 +43,13 @@ class LoginAction extends BaseAction
             return [
                 'user' => $user,
                 'tokens' => null,
-                'two_factor' => app(StartTwoFactorChallengeAction::class)->handle($user),
+                'two_factor' => $this->startTwoFactorChallengeAction->handle($user),
             ];
         }
 
         return [
             'user' => $user,
-            'tokens' => app(TokenService::class)->issueTokenPair($user),
+            'tokens' => $this->tokenService->issueTokenPair($user),
             'two_factor' => null,
         ];
     }

@@ -11,6 +11,11 @@ use Illuminate\Validation\ValidationException;
 
 class UpdatePasswordAction extends BaseAction
 {
+    public function __construct(private readonly TokenService $tokenService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      */
@@ -23,6 +28,6 @@ class UpdatePasswordAction extends BaseAction
         $user->forceFill(['password' => bcrypt($updatePasswordData->password)])
             ->save();
 
-        app(TokenService::class)->revokeAll($user);
+        $this->tokenService->revokeAll($user);
     }
 }

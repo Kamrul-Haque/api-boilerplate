@@ -11,15 +11,21 @@ use App\Models\VerificationCode;
 use App\Services\TokenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class VerifyTwoFactorAction extends BaseAction
 {
+    public function __construct(private readonly TokenService $tokenService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
      * @return array{user: User, tokens: TokenPairData}
      *
-     * @throws ValidationException
+     * @throws ValidationException|Throwable
      */
     public function handle(TwoFactorVerifyData $twoFactorVerifyData): array
     {
@@ -53,7 +59,7 @@ class VerifyTwoFactorAction extends BaseAction
 
             return [
                 'user' => $user,
-                'tokens' => app(TokenService::class)->issueTokenPair($user),
+                'tokens' => $this->tokenService->issueTokenPair($user),
             ];
         });
     }

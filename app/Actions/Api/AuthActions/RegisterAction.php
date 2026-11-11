@@ -10,6 +10,11 @@ use Exception;
 
 class RegisterAction extends BaseAction
 {
+    public function __construct(private readonly TokenService $tokenService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
@@ -25,7 +30,7 @@ class RegisterAction extends BaseAction
 
         return [
             'user' => $user,
-            'tokens' => app(TokenService::class)->issueTokenPair($user),
+            'tokens' => $this->tokenService->issueTokenPair($user),
         ];
     }
 }

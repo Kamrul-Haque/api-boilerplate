@@ -11,6 +11,11 @@ use Illuminate\Auth\AuthenticationException;
 
 class RefreshTokenAction extends BaseAction
 {
+    public function __construct(private readonly TokenService $tokenService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
@@ -20,6 +25,6 @@ class RefreshTokenAction extends BaseAction
      */
     public function handle(RefreshTokenData $refreshTokenData): array
     {
-        return app(TokenService::class)->refresh($refreshTokenData->refresh_token);
+        return $this->tokenService->refresh($refreshTokenData->refresh_token);
     }
 }

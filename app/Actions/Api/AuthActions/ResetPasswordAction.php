@@ -12,6 +12,12 @@ use Illuminate\Validation\ValidationException;
 
 class ResetPasswordAction extends BaseAction
 {
+    public function __construct(
+        private readonly TokenService $tokenService,
+    ) {
+        parent::__construct();
+    }
+
     /**
      * Perform the action
      *
@@ -41,7 +47,7 @@ class ResetPasswordAction extends BaseAction
         $user->forceFill(['password' => bcrypt($resetPasswordData->password)])
             ->save();
 
-        app(TokenService::class)->revokeAll($user);
+        $this->tokenService->revokeAll($user);
 
         $verificationCode->delete();
     }
