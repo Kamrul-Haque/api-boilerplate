@@ -28,8 +28,8 @@ class DestroyUserAction extends BaseAction
             throw new ClientErrorException(trans('common.cannot_delete_user'));
         }
 
-        if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {
-            Storage::disk('s3')->delete($user->avatar);
+        if ($user->avatar && Storage::exists($user->avatar)) {
+            Storage::delete($user->avatar);
         }
 
         $user->delete();

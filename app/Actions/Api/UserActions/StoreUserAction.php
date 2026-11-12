@@ -29,7 +29,7 @@ class StoreUserAction extends BaseAction
         $validated['password'] = bcrypt($password);
 
         if (isset($validated['avatar'])) {
-            $validated['avatar'] = $validated['avatar']->store('uploads/avatars', 's3');
+            $validated['avatar'] = $validated['avatar']->store('uploads/avatars');
         }
 
         try {

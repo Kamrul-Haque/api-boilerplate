@@ -4,10 +4,6 @@ use App\Enums\ReservedRole;
 use App\Http\Controllers\Api as ApiControllers;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect('/docs/api');
-});
-
 Route::post('register', [ApiControllers\AuthController::class, 'register']);
 Route::post('login', [ApiControllers\AuthController::class, 'login'])
     ->name('login')

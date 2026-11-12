@@ -27,11 +27,11 @@ class UpdateUserAction extends BaseAction
         $validated = $userData->toArray();
 
         if (isset($validated['avatar'])) {
-            if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {
-                Storage::disk('s3')->delete($user->avatar);
+            if ($user->avatar && Storage::exists($user->avatar)) {
+                Storage::delete($user->avatar);
             }
 
-            $validated['avatar'] = $validated['avatar']->store('uploads/avatars', 's3');
+            $validated['avatar'] = $validated['avatar']->store('uploads/avatars');
         } else {
             $validated = Arr::except($validated, 'avatar');
         }
