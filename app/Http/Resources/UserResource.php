@@ -20,7 +20,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'avatar' => $this->avatar ? Storage::temporaryUrl($this->avatar) : null,
+            'avatar' => $this->avatar ? Storage::temporaryUrl($this->avatar, now()->addMinutes(15)) : null,
             'active_role' => new ActiveRoleResource($this->whenLoaded('active_role')),
             'roles' => RoleIndexResource::collection($this->whenLoaded('roles')),
             'permissions' => $this->whenLoaded('active_role', function () {
