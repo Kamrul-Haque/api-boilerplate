@@ -29,10 +29,8 @@ test('refresh endpoint returns a new token pair', function () {
     ])->assertStatus(200)
         ->assertJsonStructure([
             'message',
-            'token',
             'access_token',
             'refresh_token',
-            'token_type',
             'expires_in',
             'user' => ['id', 'name', 'email'],
         ]);

@@ -35,8 +35,8 @@ test('a user with only the user role logs in without two factor', function () {
         'password' => $this->password,
     ])
         ->assertStatus(200)
-        ->assertJsonStructure(['token', 'access_token', 'refresh_token'])
-        ->assertJsonMissingPath('two_factor_required');
+        ->assertJsonStructure(['access_token', 'refresh_token'])
+        ->assertJsonPath('two_factor_required', false);
 });
 
 test('a user with a non-user role receives a two factor challenge', function () {
@@ -53,7 +53,8 @@ test('a user with a non-user role receives a two factor challenge', function () 
         ])
         ->assertJsonStructure(['message', 'verification_token'])
         ->assertJsonMissingPath('access_token')
-        ->assertJsonMissingPath('refresh_token');
+        ->assertJsonMissingPath('refresh_token')
+        ->assertJsonMissingPath('data');
 
     $this->assertDatabaseHas('verification_codes', [
         'token' => $response->json('verification_token'),
@@ -84,10 +85,8 @@ test('it verifies the two factor code and returns tokens', function () {
         ->assertStatus(200)
         ->assertJsonStructure([
             'message',
-            'token',
             'access_token',
             'refresh_token',
-            'token_type',
             'expires_in',
             'user' => ['id', 'name', 'email'],
         ]);

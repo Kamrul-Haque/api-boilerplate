@@ -4,6 +4,10 @@
 
 - Wants a plan presented and approved before starting a non-trivial refactor or architecture change ("please share the plan before starting refactor"). Confidence: 0.8
 
+## API responses
+
+- Prefers API responses not to be wrapped in a `data` envelope — asks to disable the JsonResource wrapper and keep fields (message, tokens, user) at the top level. Confidence: 0.6
+
 ## Design
 
 - Challenges design choices that add extra state/schema (e.g., version columns) and pushes back asking why existing data relationships couldn't achieve the same guarantee; favors the minimal mechanism. Confidence: 0.65

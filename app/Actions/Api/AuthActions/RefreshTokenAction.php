@@ -19,12 +19,19 @@ class RefreshTokenAction extends BaseAction
     /**
      * Perform the action
      *
-     * @return array{user: User, tokens: TokenPairData}
+     * @return object{user: User, tokens: TokenPairData}
      *
      * @throws AuthenticationException
      */
-    public function handle(RefreshTokenData $refreshTokenData): array
+    public function handle(RefreshTokenData $refreshTokenData): object
     {
-        return $this->tokenService->refresh($refreshTokenData->refresh_token);
+        $data = $this->tokenService->refresh($refreshTokenData->refresh_token);
+
+        return (object) [
+            'user' => $data['user'],
+            'accessToken' => $data['tokens']->accessToken,
+            'refreshToken' => $data['tokens']->refreshToken,
+            'expiresIn' => $data['tokens']->expiresIn,
+        ];
     }
 }

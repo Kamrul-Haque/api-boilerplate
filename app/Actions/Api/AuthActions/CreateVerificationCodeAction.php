@@ -20,7 +20,7 @@ class CreateVerificationCodeAction extends BaseAction
             'identifier_key' => $verificationCodeData->identifier_key->value,
             'identifier_value' => $verificationCodeData->identifier_value,
             'code' => (string) random_int(100000, 999999),
-            'expire_at' => now()->addMinutes(5),
+            'expire_at' => now()->addMinutes(VerificationCode::TTL_MINUTES),
             'token' => (string) Str::uuid(),
         ]);
 

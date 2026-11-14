@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class VerificationCode extends Model
 {
+    public const int TTL_MINUTES = 5;
+
     protected $guarded = ['id'];
 
     /**

@@ -23,7 +23,7 @@ class StartTwoFactorChallengeAction extends BaseAction
      *
      * @throws Exception
      */
-    public function handle(User $user): VerificationCode
+    public function handle(User $user): object
     {
         VerificationCode::where('purpose', VerificationCodePurpose::TWO_FACTOR->value)
             ->where('identifier_key', VerificationCodeIdentifierKey::EMAIL->value)
@@ -31,12 +31,17 @@ class StartTwoFactorChallengeAction extends BaseAction
             ->where('is_verified', false)
             ->delete();
 
-        return $this->createVerificationCodeAction->handle(
+        $verificationCode = $this->createVerificationCodeAction->handle(
             new VerificationCodeData(
                 purpose: VerificationCodePurpose::TWO_FACTOR,
                 identifier_key: VerificationCodeIdentifierKey::EMAIL,
                 identifier_value: $user->email,
             )
         );
+
+        return (object) [
+            'token' => $verificationCode->token,
+            'expiresIn' => VerificationCode::TTL_MINUTES * 60,
+        ];
     }
 }

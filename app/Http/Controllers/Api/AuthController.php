@@ -20,7 +20,6 @@ use App\DTOs\Api\ResetPasswordData;
 use App\DTOs\Api\TwoFactorVerifyData;
 use App\DTOs\Api\UpdatePasswordData;
 use App\DTOs\Api\VerificationCodeData;
-use App\DTOs\Token\TokenPairData;
 use App\Enums\VerificationCodePurpose;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
@@ -30,8 +29,8 @@ use App\Http\Requests\Api\ResetPasswordRequest;
 use App\Http\Requests\Api\TwoFactorVerifyRequest;
 use App\Http\Requests\Api\UpdatePasswordRequest;
 use App\Http\Requests\Api\VerificationCodeRequest;
+use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use Dedoc\Scramble\Attributes\Group;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
@@ -59,10 +58,9 @@ class AuthController extends Controller
     {
         $registerData = RegisterData::fromRequest($request);
 
-        return $this->tokenResponse(
-            trans('success.parent_registered'),
-            $registerAction->handle($registerData)
-        );
+        $data = $registerAction->handle($registerData);
+
+        return AuthResource::make($data, trans('success.parent_registered'));
     }
 
     /**
@@ -82,19 +80,15 @@ class AuthController extends Controller
 
         $data = $loginAction->handle($loginData);
 
-        if ($data['two_factor']) {
-            return response()->json([
-                'message' => trans('success.two_factor_required'),
-                'two_factor_required' => true,
-                'verification_token' => $data['two_factor']->token,
-                'expires_in' => 300,
-            ], 202);
-        }
+        $message = $data->twoFactorRequired
+            ? trans('success.two_factor_required')
+            : trans('success.login_success');
 
-        return $this->tokenResponse(
-            trans('success.login_success'),
-            $data
-        );
+        $resource = AuthResource::make($data, $message);
+
+        return $data->twoFactorRequired
+            ? $resource->response()->setStatusCode(202)
+            : $resource;
     }
 
     /**
@@ -106,16 +100,15 @@ class AuthController extends Controller
      *
      * @return JsonResponse
      *
-     * @throws ValidationException
+     * @throws ValidationException|Throwable
      */
     public function verifyTwoFactor(TwoFactorVerifyRequest $request, VerifyTwoFactorAction $verifyTwoFactorAction)
     {
         $twoFactorVerifyData = TwoFactorVerifyData::fromRequest($request);
 
-        return $this->tokenResponse(
-            trans('success.login_success'),
-            $verifyTwoFactorAction->handle($twoFactorVerifyData)
-        );
+        $data = $verifyTwoFactorAction->handle($twoFactorVerifyData);
+
+        return AuthResource::make($data, trans('success.login_success'));
     }
 
     /**
@@ -133,10 +126,9 @@ class AuthController extends Controller
     {
         $refreshTokenData = RefreshTokenData::fromRequest($request);
 
-        return $this->tokenResponse(
-            trans('success.token_refreshed'),
-            $refreshTokenAction->handle($refreshTokenData)
-        );
+        $data = $refreshTokenAction->handle($refreshTokenData);
+
+        return AuthResource::make($data, trans('success.token_refreshed'));
     }
 
     /**
@@ -145,6 +137,8 @@ class AuthController extends Controller
      * Send verification code to the user.
      *
      * @return JsonResponse
+     *
+     * @throws Exception
      */
     public function verificationCode(
         VerificationCodeRequest $request,
@@ -265,26 +259,6 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => trans('success.logout_success'),
-        ]);
-    }
-
-    /**
-     * Build a response containing a user and a token pair.
-     *
-     * @param  array{user: User, tokens: TokenPairData}  $data
-     */
-    private function tokenResponse(string $message, array $data): JsonResponse
-    {
-        $tokens = $data['tokens'];
-
-        return response()->json([
-            'message' => $message,
-            'user' => UserResource::make($data['user']),
-            'token' => $tokens->accessToken,
-            'access_token' => $tokens->accessToken,
-            'refresh_token' => $tokens->refreshToken,
-            'token_type' => $tokens->tokenType,
-            'expires_in' => (int) $tokens->expiresIn,
         ]);
     }
 }

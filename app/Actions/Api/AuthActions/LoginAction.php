@@ -4,9 +4,7 @@ namespace App\Actions\Api\AuthActions;
 
 use App\Actions\BaseAction;
 use App\DTOs\Api\LoginData;
-use App\DTOs\Token\TokenPairData;
 use App\Models\User;
-use App\Models\VerificationCode;
 use App\Services\TokenService;
 use Exception;
 use Hash;
@@ -24,12 +22,11 @@ class LoginAction extends BaseAction
     /**
      * Perform the action
      *
-     * @return array{user: User, tokens: ?TokenPairData, two_factor: ?VerificationCode}
      *
      * @throws AuthenticationException
      * @throws Exception
      */
-    public function handle(LoginData $loginData): array
+    public function handle(LoginData $loginData): object
     {
         $user = User::where('email', $loginData->email)->first();
 
@@ -40,17 +37,24 @@ class LoginAction extends BaseAction
         $user->load(['active_role', 'active_role.permissions', 'roles']);
 
         if ($user->requiresTwoFactorAuthentication()) {
-            return [
+            $verificationCode = $this->startTwoFactorChallengeAction->handle($user);
+
+            return (object) [
                 'user' => $user,
-                'tokens' => null,
-                'two_factor' => $this->startTwoFactorChallengeAction->handle($user),
+                'verificationToken' => $verificationCode->token,
+                'expiresIn' => $verificationCode->expiresIn,
+                'twoFactorRequired' => true,
             ];
         }
 
-        return [
+        $tokenPair = $this->tokenService->issueTokenPair($user);
+
+        return (object) [
             'user' => $user,
-            'tokens' => $this->tokenService->issueTokenPair($user),
-            'two_factor' => null,
+            'accessToken' => $tokenPair->accessToken,
+            'refreshToken' => $tokenPair->refreshToken,
+            'expiresIn' => $tokenPair->expiresIn,
+            'twoFactorRequired' => false,
         ];
     }
 }

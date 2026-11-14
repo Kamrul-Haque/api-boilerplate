@@ -23,11 +23,11 @@ class VerifyTwoFactorAction extends BaseAction
     /**
      * Perform the action
      *
-     * @return array{user: User, tokens: TokenPairData}
+     * @return object{user: User, tokens: TokenPairData}
      *
      * @throws ValidationException|Throwable
      */
-    public function handle(TwoFactorVerifyData $twoFactorVerifyData): array
+    public function handle(TwoFactorVerifyData $twoFactorVerifyData): object
     {
         $verificationCode = VerificationCode::where('token', $twoFactorVerifyData->verification_token)
             ->where('purpose', VerificationCodePurpose::TWO_FACTOR->value)
@@ -57,9 +57,14 @@ class VerifyTwoFactorAction extends BaseAction
 
             $user->load(['active_role', 'active_role.permissions', 'roles']);
 
-            return [
+            $tokenPair = $this->tokenService->issueTokenPair($user);
+
+            return (object) [
                 'user' => $user,
-                'tokens' => $this->tokenService->issueTokenPair($user),
+                'accessToken' => $tokenPair->accessToken,
+                'refreshToken' => $tokenPair->refreshToken,
+                'expiresIn' => $tokenPair->expiresIn,
+                'twoFactorRequired' => false,
             ];
         });
     }
